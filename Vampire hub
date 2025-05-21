@@ -1,0 +1,491 @@
+
+do
+    repeat
+        task.wait();
+    until game:IsLoaded()
+    local Players = game:GetService("Players");
+    local RunService = game:GetService("RunService");
+    local UserInputService = game:GetService("UserInputService");
+    local Workspace = game:GetService("Workspace");
+    local ReplicatedStorage = game:GetService("ReplicatedStorage");
+    local TweenService = game:GetService("TweenService");
+    local Debris = game:GetService("Debris");
+    local VirtualInputManager = game:GetService("VirtualInputManager");
+    local Stats = game:GetService("Stats");
+    local TeleportService = game:GetService("TeleportService");
+    local Camera = Workspace.CurrentCamera;
+    local LocalPlayer = Players.LocalPlayer;
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() ;
+    local Humanoid = Character:WaitForChild("Humanoid");
+    setfpscap(60);
+    local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))();
+    local Window = WindUI:CreateWindow({
+        Title = "Reaver",
+        Icon = "swords",
+        Author = "By: Reaver",
+        Folder = "ReaverDesc",
+        Size = UDim2.fromOffset(580, 460),
+        Transparent = false,
+        Theme = "Dark",
+        SideBarWidth = 200,
+        Background = "",
+        User = {
+            Enabled = true,
+            Anonymous = false,
+            Callback = function()
+                print("Clicked user avatar");
+            end
+        },
+        KeySystem = {
+            Key = {
+                "Private25"
+            },
+            Note = "Enter the key to access the hub.",
+            Thumbnail = {
+                Image = "rbxassetid://",
+                Title = "Reaver"
+            },
+            URL = "https://github.com/Footagesus/WindUI",
+            SaveKey = false
+        }
+    });
+    local Tabs = {
+        Home = Window:Tab({
+            Title = "Home",
+            Icon = "home"
+        }),
+        Main = Window:Tab({
+            Title = "Main",
+            Icon = "swords"
+        }),
+        Visual = Window:Tab({
+            Title = "Visuals",
+            Icon = "eye"
+        }),
+        AI = Window:Tab({
+            Title = "AI Play",
+            Icon = "bot"
+        }),
+        Farm = Window:Tab({
+            Title = "Auto Farm",
+            Icon = "leaf"
+        }),
+        Misc = Window:Tab({
+            Title = "Misc",
+            Icon = "cog"
+        })
+    };
+    local Remotes = {};
+    local Parries = 0;
+    local disableParryUntil = 0;
+    local Aerodynamic = false;
+    local Aerodynamic_Time = tick();
+    local Last_Input = UserInputService:GetLastInputType();
+    local Closest_Entity = nil;
+    local Parried = false;
+    local pingBased = true;
+    local manualSpamSpeed = 10;
+    local TargetSelectionMethod = "ClosestToCursor";
+    local Sound_Effect = false;
+    local sound_effect_type = "DC_15X";
+    local CustomId = "";
+    local visualizerEnabled = false;
+    local Spamming = false;
+    local spectate_Enabled = false;
+    local LookToBall = false;
+    local Connections_Manager = {};
+    local Auto_Parry = {};
+    task.spawn(function()
+        for _, Value in pairs(getgc(true)) do
+            if ((type(Value) == "function") and islclosure(Value)) then
+                local Protos = debug.getprotos(Value);
+                local Upvalues = debug.getupvalues(Value);
+                local Constants = debug.getconstants(Value);
+                if (Protos and Upvalues and Constants and (# Protos == 4) and (# Upvalues == 24) and (# Constants == 104)) then
+                    Remotes[debug.getupvalue(Value, 16)] = debug.getconstant(Value, 62);
+                    Parry_Key = debug.getupvalue(Value, 17);
+                    Remotes[debug.getupvalue(Value, 18)] = debug.getconstant(Value, 64);
+                    Remotes[debug.getupvalue(Value, 19)] = debug.getconstant(Value, 65);
+                    break;
+                end
+            end
+        end
+    end);
+    Auto_Parry.Get_Balls = function()
+        local Balls = {};
+        for _, instance in pairs(Workspace.Balls:GetChildren()) do
+            if instance:GetAttribute("realBall") then
+                instance.CanCollide = false;
+                table.insert(Balls, instance);
+            end
+        end
+        return Balls;
+    end;
+    Auto_Parry.Get_Ball = function()
+        for _, instance in pairs(Workspace.Balls:GetChildren()) do
+            if instance:GetAttribute("realBall") then
+                instance.CanCollide = false;
+                return instance;
+            end
+        end
+    end;
+    Auto_Parry.Closest_Player = function()
+        local Max_Distance = math.huge;
+        Closest_Entity = nil;
+        for _, Entity in pairs(Workspace.Alive:GetChildren()) do
+            if ((tostring(Entity) ~= tostring(LocalPlayer)) and Entity.PrimaryPart) then
+                local Distance = LocalPlayer:DistanceFromCharacter(Entity.PrimaryPart.Position);
+                if (Distance < Max_Distance) then
+                    Max_Distance = Distance;
+                    Closest_Entity = Entity;
+                end
+            end
+        end
+        return Closest_Entity;
+    end;
+    Auto_Parry.Parry_Data = function()
+        local Camera = workspace.CurrentCamera;
+        if not Camera then
+            return {
+                0,
+                CFrame.new(),
+                {},
+                {
+                    0,
+                    0
+                }
+            };
+        end
+        local ViewportSize = Camera.ViewportSize;
+        local MouseLocation = (((Last_Input == Enum.UserInputType.MouseButton1) or (Last_Input == Enum.UserInputType.MouseButton2) or (Last_Input == Enum.UserInputType.Keyboard)) and UserInputService:GetMouseLocation()) or Vector2.new(ViewportSize.X / 2, ViewportSize.Y / 2) ;
+        local Used = {
+            MouseLocation.X,
+            MouseLocation.Y
+        };
+        if (TargetSelectionMethod == "ClosestToPlayer") then
+            Auto_Parry.Closest_Player();
+            local targetPlayer = Closest_Entity;
+            if (targetPlayer and targetPlayer.PrimaryPart) then
+                Used = targetPlayer.PrimaryPart.Position;
+            end
+        end
+        local Alive = workspace.Alive:GetChildren();
+        local Events = {};
+        for _, v in ipairs(Alive) do
+            Events[tostring(v)] = Camera:WorldToScreenPoint(v.PrimaryPart.Position);
+        end
+        local pos = Camera.CFrame.Position;
+        local look = Camera.CFrame.LookVector;
+        local up = Camera.CFrame.UpVector;
+        local right = Camera.CFrame.RightVector;
+        local directions = {
+            Backwards = pos - (look * 1000),
+            Random = Vector3.new(math.random(- 3000, 3000), math.random(- 3000, 3000), math.random(- 3000, 3000)),
+            Straight = pos + (look * 1000),
+            Up = pos + (up * 1000),
+            Right = pos + (right * 1000),
+            Left = pos - (right * 1000)
+        };
+        local lookTarget = directions[Auto_Parry.Parry_Type] or (pos + (look * 1000)) ;
+        local DirectionCF = CFrame.new(pos, lookTarget);
+        return {
+            0,
+            DirectionCF,
+            Events,
+            Used
+        };
+    end;
+    Auto_Parry.Parry = function()
+        if ((Parries > 7) or (tick() < disableParryUntil)) then
+            return;
+        end
+        Parries = Parries + 1 ;
+        local Parry_Data = Auto_Parry.Parry_Data();
+        for Remote, Args in pairs(Remotes) do
+            Remote:FireServer(Args, Parry_Key, Parry_Data[1], Parry_Data[2], Parry_Data[3], Parry_Data[4]);
+        end
+        task.delay(0.5, function()
+            Parries = math.max(Parries - 1, 0);
+        end);
+    end;
+    Auto_Parry.Is_Curved = function()
+        local Ball = Auto_Parry.Get_Ball();
+        if not Ball then
+            return false;
+        end
+        local Zoomies = Ball:FindFirstChild("zoomies");
+        if not Zoomies then
+            return false;
+        end
+        local Velocity = Zoomies.VectorVelocity;
+        local Ball_Direction = Velocity.Unit;
+        local Direction = (LocalPlayer.Character.PrimaryPart.Position - Ball.Position).Unit;
+        local Dot = Direction:Dot(Ball_Direction);
+        local Speed = Velocity.Magnitude;
+        local Distance = (LocalPlayer.Character.PrimaryPart.Position - Ball.Position).Magnitude;
+        if not pingBased then
+            if (Speed < 100) then
+                return false;
+            end
+            if (Dot < 0.8) then
+                return true;
+            end
+            if (Distance > 100) then
+                return false;
+            end
+            return false;
+        end
+        local Ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue();
+        local Speed_Threshold = math.min(Speed / 100, 40);
+        local Angle_Threshold = 40 * math.max(Dot, 0) ;
+        local Dot_Threshold = 0.5 - (Ping / 975) ;
+        local Reach_Time = (Distance / Speed) - (Ping / 1000) ;
+        local Enough_Speed = Speed > 100 ;
+        local Ball_Distance_Threshold = ((math.max(Ping / 10, 15) - math.min(Distance / 1000, 15)) + Angle_Threshold + Speed_Threshold) * (1 + (Ping / 925)) ;
+        if (Enough_Speed and (Reach_Time > (Ping / 10))) then
+            Ball_Distance_Threshold = math.max(Ball_Distance_Threshold - 15, 15);
+        end
+        if (Distance < Ball_Distance_Threshold) then
+            return false;
+        end
+        if ((tick() - disableParryUntil) < (Reach_Time / 1.5)) then
+            return true;
+        end
+        return Dot < Dot_Threshold ;
+    end;
+    local visualizer = Instance.new("Part");
+    visualizer.Shape = Enum.PartType.Ball;
+    visualizer.Anchored = true;
+    visualizer.CanCollide = false;
+    visualizer.Material = Enum.Material.ForceField;
+    visualizer.Transparency = 0.5;
+    visualizer.Size = Vector3.zero;
+    visualizer.Parent = Workspace;
+    local function calculate_visualizer_radius(ball)
+        local velocity = (ball:FindFirstChild("zoomies") and ball.zoomies.VectorVelocity) or Vector3.new() ;
+        return (Spamming and 25) or math.clamp((velocity.Magnitude / 2.4) + 10, 15, 200) ;
+    end
+    local function toggle_visualizer(state)
+        visualizerEnabled = state;
+        if not state then
+            visualizer.Size = Vector3.zero;
+        end
+    end
+    RunService.RenderStepped:Connect(function()
+        if not visualizerEnabled then
+            return;
+        end
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() ;
+        local primaryPart = char and char.PrimaryPart ;
+        local ball = Auto_Parry.Get_Ball();
+        if not (primaryPart and ball) then
+            visualizer.Size = Vector3.zero;
+            return;
+        end
+        local radius = calculate_visualizer_radius(ball);
+        visualizer.Size = Vector3.new(radius, radius, radius);
+        visualizer.CFrame = primaryPart.CFrame;
+        visualizer.Color = (Spamming and Color3.fromRGB(255, 0, 0)) or ((ball:GetAttribute("target") == LocalPlayer.Name) and Color3.fromRGB(255, 0, 0)) or Color3.fromRGB(255, 255, 255) ;
+    end);
+    local sound_assets = {
+        DC_15X = "rbxassetid://936447863",
+        Neverlose = "rbxassetid://8679627751",
+        Minecraft = "rbxassetid://8766809464",
+        MinecraftHit2 = "rbxassetid://8458185621",
+        TeamfortressBonk = "rbxassetid://8255306220",
+        TeamfortressBell = "rbxassetid://2868331684",
+        Custom = ""
+    };
+    local function PlaySound()
+        if not Sound_Effect then
+            return;
+        end
+        local sound_id;
+        if ((CustomId ~= "") and (sound_effect_type == "Custom")) then
+            sound_id = "rbxassetid://" .. CustomId ;
+        else
+            sound_id = sound_assets[sound_effect_type];
+        end
+        if (not sound_id or (sound_id == "")) then
+            return;
+        end
+        local sound = Instance.new("Sound");
+        sound.SoundId = sound_id;
+        sound.Volume = 1;
+        sound.PlayOnRemove = true;
+        sound.Parent = workspace;
+        sound:Destroy();
+    end
+    ReplicatedStorage.Remotes.ParrySuccess.OnClientEvent:Connect(PlaySound);
+    local manualSpamGui;
+    local toggleManualSpam = false;
+    local spamConnection;
+    local function createManualSpamUI()
+        if manualSpamGui then
+            manualSpamGui:Destroy();
+            manualSpamGui = nil;
+            toggleManualSpam = false;
+            if spamConnection then
+                spamConnection:Disconnect();
+                spamConnection = nil;
+            end
+            return;
+        end
+        manualSpamGui = Instance.new("ScreenGui");
+        manualSpamGui.Name = "ManualSpamUI";
+        manualSpamGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui") ;
+        manualSpamGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+        manualSpamGui.ResetOnSpawn = false;
+        local Main = Instance.new("Frame");
+        Main.Name = "Main";
+        Main.Parent = manualSpamGui;
+        Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+        Main.BorderSizePixel = 0;
+        Main.Position = UDim2.new(0.4, 0, 0.4, 0);
+        Main.Size = UDim2.new(0.2, 0, 0.15, 0);
+        local UICorner = Instance.new("UICorner", Main);
+        local spamButton = Instance.new("TextButton");
+        spamButton.Name = "SpamButton";
+        spamButton.Parent = Main;
+        spamButton.Size = UDim2.new(0.8, 0, 0.5, 0);
+        spamButton.Position = UDim2.new(0.1, 0, 0.3, 0);
+        spamButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
+        spamButton.Text = "Spam";
+        spamButton.TextColor3 = Color3.fromRGB(255, 255, 255);
+        spamButton.Font = Enum.Font.GothamBold;
+        spamButton.TextScaled = true;
+        spamButton.ClipsDescendants = true;
+        local UICorner2 = Instance.new("UICorner", spamButton);
+        local statusIndicator = Instance.new("Frame");
+        statusIndicator.Name = "StatusIndicator";
+        statusIndicator.Parent = Main;
+        statusIndicator.Size = UDim2.new(0.1, 0, 0.3, 0);
+        statusIndicator.Position = UDim2.new(0.05, 0, 0.3, 0);
+        statusIndicator.BackgroundColor3 = Color3.fromRGB(0, 0, 128);
+        statusIndicator.ClipsDescendants = true;
+        local UICorner3 = Instance.new("UICorner", statusIndicator);
+        local toggleSpam;
+        local isGreen = false;
+        local function switchColors()
+            isGreen = not isGreen;
+            if isGreen then
+                statusIndicator.BackgroundColor3 = Color3.fromRGB(0, 255, 0);
+                spamButton.BackgroundColor3 = Color3.fromRGB(0, 0, 128);
+            else
+                statusIndicator.BackgroundColor3 = Color3.fromRGB(0, 0, 128);
+                spamButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0);
+            end
+        end
+        spamButton.MouseButton1Click:Connect(function()
+            toggleSpam = not toggleSpam;
+            if toggleSpam then
+                switchColors();
+                spamConnection = RunService.PreSimulation:Connect(function()
+                    for _ = 1, manualSpamSpeed do
+                        if not toggleSpam then
+                            break;
+                        end
+                        pcall(Auto_Parry.Parry);
+                    end
+                end);
+            else
+                switchColors();
+                if spamConnection then
+                    spamConnection:Disconnect();
+                    spamConnection = nil;
+                end
+            end
+        end);
+    end
+    Tabs.Main:Section({
+        Title = "Main Features"
+    });
+    local AutoParryToggle = Tabs.Main:Toggle({
+        Title = "Auto Parry",
+        Desc = "Automatically parry the ball",
+        Icon = "shield",
+        Default = true,
+        Callback = function(state)
+            if state then
+                Connections_Manager["Auto Parry"] = RunService.PreSimulation:Connect(function()
+                    local Balls = Auto_Parry.Get_Balls();
+                    if (not Balls or (# Balls == 0)) then
+                        return;
+                    end
+                    for _, Ball in pairs(Balls) do
+                        if not Ball then
+                            return;
+                        end
+                        local Zoomies = Ball:FindFirstChild("zoomies");
+                        if not Zoomies then
+                            return;
+                        end
+                        Ball:GetAttributeChangedSignal("target"):Once(function()
+                            Parried = false;
+                        end);
+                        if Parried then
+                            return;
+                        end
+                        local Ball_Target = Ball:GetAttribute("target");
+                        local One_Target = Balls[1] and Balls[1]:GetAttribute("target") ;
+                        local Velocity = Zoomies.VectorVelocity;
+                        local character = LocalPlayer.Character;
+                        if (not character or not character.PrimaryPart) then
+                            return;
+                        end
+                        local Distance = (character.PrimaryPart.Position - Ball.Position).Magnitude;
+                        local Speed = Velocity.Magnitude;
+                        local Ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 10 ;
+                        local Parry_Accuracy = (Speed / 3.25) + Ping ;
+                        local Curved = Auto_Parry.Is_Curved();
+                        if ((Ball_Target == tostring(LocalPlayer)) and Aerodynamic) then
+                            if ((tick() - Aerodynamic_Time) > 0.6) then
+                                Aerodynamic_Time = tick();
+                                Aerodynamic = false;
+                            end
+                            return;
+                        end
+                        if ((One_Target == tostring(LocalPlayer)) and Curved) then
+                            return;
+                        end
+                        if ((Ball_Target == tostring(LocalPlayer)) and (Distance <= Parry_Accuracy)) then
+                            Auto_Parry.Parry();
+                            Parried = true;
+                        end
+                        local Last_Parrys = tick();
+                        while (tick() - Last_Parrys) < 1 do
+                            if not Parried then
+                                break;
+                            end
+                            task.wait();
+                        end
+                        Parried = false;
+                    end
+                end);
+            elseif Connections_Manager["Auto Parry"] then
+                Connections_Manager["Auto Parry"]:Disconnect();
+                Connections_Manager["Auto Parry"] = nil;
+            end
+        end
+    });
+    local AutoSpamToggle = Tabs.Main:Toggle({
+        Title = "Auto Spam",
+        Desc = "Spam parry if ball is near",
+        Icon = "repeat",
+        Default = true,
+        Callback = function(state)
+            if state then
+                if Connections_Manager["Auto Spam"] then
+                    Connections_Manager["Auto Spam"]:Disconnect();
+                end
+                Connections_Manager["Auto Spam"] = RunService.Heartbeat:Connect(function()
+                    local ball = Auto_Parry.Get_Ball();
+                    if (ball and ball:IsDescendantOf(workspace)) then
+                        local zoomies = ball:FindFirstChild("zoomies");
+                        if zoomies then
+                            Auto_Parry.Closest_Player();
+                            local targetPlayer = Closest_Entity;
+                            if (targetPlayer and targetPlayer.PrimaryPart and targetPlayer:IsDescendantOf(workspace)) then
+                                local playerDistance = LocalPlayer:DistanceFromCharacter(ball.Position);
+                                local targetPosition = targetPlayer.PrimaryPart.Position;
+    
