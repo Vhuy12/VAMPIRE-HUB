@@ -1,6 +1,6 @@
 local Players = game:GetService("Players") local RunService = game:GetService("RunService") local ReplicatedStorage = game:GetService("ReplicatedStorage") local VirtualInputManager = game:GetService("VirtualInputManager") local UserInputService = game:GetService("UserInputService") local Workspace = game:GetService("Workspace") local Camera = Workspace.CurrentCamera local Player = Players.LocalPlayer local Character = Player.Character or Player.CharacterAdded:Wait()
 
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Vhuy12/Starlight-hub/main/GUI.lua"))() end)
+pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Vhuy12/Starlight-hub/main/GUI"))() end)
 
 local ConfigFolder = "VampireConfig" local ConfigFile = "VampireSettings.json" local HttpService = game:GetService("HttpService") local SavePath = ConfigFolder .. "/" .. ConfigFile
 
