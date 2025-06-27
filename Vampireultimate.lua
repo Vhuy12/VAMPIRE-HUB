@@ -1,12 +1,101 @@
 local Players = game:GetService("Players") local RunService = game:GetService("RunService") local ReplicatedStorage = game:GetService("ReplicatedStorage") local VirtualInputManager = game:GetService("VirtualInputManager") local UserInputService = game:GetService("UserInputService") local Workspace = game:GetService("Workspace") local Camera = Workspace.CurrentCamera local Player = Players.LocalPlayer local Character = Player.Character or Player.CharacterAdded:Wait()
 
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Vhuy12/Starlight-hub/main/GUI"))() end)
+-- 🧠 Load GUI đầy đủ nếu bật GUI if getgenv().Vampire.GUI then local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "VampireHub",
+    LoadingTitle = "Vampire Ultimate",
+    LoadingSubtitle = "by Huy",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "VampireConfig",
+        FileName = "Vampire_UI"
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 4483362458)
+local MovementTab = Window:CreateTab("Movement", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+local function AddToggle(tab, name, var)
+    tab:CreateToggle({
+        Name = name,
+        CurrentValue = getgenv().Vampire[var],
+        Callback = function(v)
+            getgenv().Vampire[var] = v
+        end
+    })
+end
+
+-- Combat Tab
+for _, setting in ipairs({
+    "AutoParry", "SpamParry", "TriggerBot", "SlashDetect", "InfinityDetect",
+    "PhantomDetect", "AntiStun", "AutoAbility", "ReflectAI", "PanicParry",
+    "AutoQ", "SmartCooldown"
+}) do
+    AddToggle(CombatTab, setting, setting)
+end
+
+-- Visual Tab
+for _, setting in ipairs({"ESP", "BallESP", "HighlightPlayers", "ShowPingFPS"}) do
+    AddToggle(VisualTab, setting, setting)
+end
+
+VisualTab:CreateSlider({
+    Name = "FOV",
+    Range = {30, 120},
+    Increment = 1,
+    Suffix = "°",
+    CurrentValue = getgenv().Vampire.FOV,
+    Callback = function(v)
+        getgenv().Vampire.FOV = v
+    end
+})
+AddToggle(VisualTab, "CustomFOV", "CustomFOV")
+
+-- Movement Tab
+for _, setting in ipairs({"Fly", "Spinbot", "Strafe", "CurveDetect"}) do
+    AddToggle(MovementTab, setting, setting)
+end
+
+-- Misc Tab
+for _, setting in ipairs({"FakeHeadless", "FakeKorblox"}) do
+    AddToggle(MiscTab, setting, setting)
+end
+
+MiscTab:CreateButton({
+    Name = "Save Config Now",
+    Callback = function()
+        local HttpService = game:GetService("HttpService")
+        local SavePath = "VampireConfig/VampireSettings.json"
+        writefile(SavePath, HttpService:JSONEncode(getgenv().Vampire))
+    end
+})
+
+end }) end
+
+for _, setting in ipairs({
+    "AutoParry", "SpamParry", "TriggerBot", "Fly", "Spinbot", "Strafe",
+    "SlashDetect", "InfinityDetect", "PhantomDetect", "AntiStun", "AutoAbility",
+    "CurveDetect", "Aimbot", "ESP", "BallESP", "HighlightPlayers",
+    "ShowPingFPS", "ReflectAI", "PanicParry", "AutoQ", "SmartCooldown",
+    "CustomFOV", "FakeHeadless", "FakeKorblox"
+}) do
+    AddToggle(setting, setting)
+end
+
+end
 
 local ConfigFolder = "VampireConfig" local ConfigFile = "VampireSettings.json" local HttpService = game:GetService("HttpService") local SavePath = ConfigFolder .. "/" .. ConfigFile
 
 if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end if not isfile(SavePath) then writefile(SavePath, HttpService:JSONEncode({})) end
 
-local defaultSettings = { AutoParry = false, SpamParry = false, TriggerBot = false, Fly = false, Spinbot = false, Strafe = false, SlashDetect = false, InfinityDetect = false, PhantomDetect = false, AntiStun = false, AutoAbility = false, CurveDetect = false, Aimbot = false, ESP = false, BallESP = false, HighlightPlayers = false, ShowPingFPS = false, ReflectAI = false, PanicParry = false, AutoQ = false, SmartCooldown = false, GUI = false, MobileButtons = false, AntiBan = true, Key = Enum.KeyCode.F, FOV = 100, CustomFOV = false, FakeHeadless = false, FakeKorblox = false }
+local defaultSettings = { AutoParry = false, SpamParry = false, TriggerBot = false, Fly = false, Spinbot = false, Strafe = false, SlashDetect = false, InfinityDetect = false, PhantomDetect = false, AntiStun = false, AutoAbility = false, CurveDetect = false, Aimbot = false, ESP = false, BallESP = false, HighlightPlayers = false, ShowPingFPS = false, ReflectAI = false, PanicParry = false, AutoQ = false, SmartCooldown = false, GUI = true, MobileButtons = false, AntiBan = true, Key = Enum.KeyCode.F, FOV = 100, CustomFOV = false, FakeHeadless = false, FakeKorblox = false }
 
 local loadedSettings = {}
 
