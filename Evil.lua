@@ -4,7 +4,7 @@ local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeE4
 
 local Window = Fluent:CreateWindow({ Title = "Vampire test version", SubTitle = "by Kurayami", TabWidth = 160, Size = UDim2.fromOffset(530, 310), Acrylic = false, Theme = "Aqua", MinimizeKey = Enum.KeyCode.LeftControl })
 
-local Tabs = { Discord = Window:AddTab({ Title = "Our Discord", Icon = "heart" }), Balant = Window:AddTab({ Title = "Balant", Icon = "swords" }), Special = Window:AddTab({ Title = "Special", Icon = "sparkles" }), Visual = Window:AddTab({ Title = "Visual", Icon = "eye" }) }
+local Tabs = { Discord = Window:AddTab({ Title = "Our Discord", Icon = "heart" }), Balant = Window:AddTab({ Title = "Balant", Icon = "swords" }), Special = Window:AddTab({ Title = "Special", Icon = "wand" }), Visual = Window:AddTab({ Title = "Visual", Icon = "eye" }) }
 
 Window:SelectTab(1)
 
