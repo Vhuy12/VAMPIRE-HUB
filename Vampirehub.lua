@@ -60,17 +60,6 @@ local firstParryType = 'F_Key'
 
 local Previous_Positions = {}
 
-local VirtualInputManager = game:GetService("VirtualInputManager")
-
-local VirtualInputService = game:GetService("VirtualInputManager")
-
-
-
-
-
-local GuiService = game:GetService('GuiService')
-
-
 
 local function updateNavigation(guiObject: GuiObject | nil)
 
