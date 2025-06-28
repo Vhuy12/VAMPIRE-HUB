@@ -2765,11 +2765,11 @@ local Airflow = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/
 
 local Window = Airflow:Init({
 
-	Name = "Celestia",
+	Name = "Vampire Test Version",
 
 	Keybind = "LeftControl",
 
-	Logo = "http://www.roblox.com/asset/?id=94220348785476",
+	Logo = "https://pin.it/1GlDfwtfQ",
 
 });
 
