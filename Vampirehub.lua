@@ -1251,58 +1251,35 @@ local function BlockMovement(actionName, inputState, inputObject)
 
 end
 
-
-
-local UserInputService = cloneref(game:GetService('UserInputService'))
-
-local ContentProvider = cloneref(game:GetService('ContentProvider'))
-
-local TweenService = cloneref(game:GetService('TweenService'))
-
-local HttpService = cloneref(game:GetService('HttpService'))
-
-local TextService = cloneref(game:GetService('TextService'))
-
-local RunService = cloneref(game:GetService('RunService'))
-
-local Lighting = cloneref(game:GetService('Lighting'))
-
-local Players = cloneref(game:GetService('Players'))
-
-local CoreGui = cloneref(game:GetService('CoreGui'))
-
-local Debris = cloneref(game:GetService('Debris'))
-
-
-
 local Players = game:GetService('Players')
-
+													
 local Player = Players.LocalPlayer
-
-
-
-
-
+													
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
-
-
-
-local Tornado_Time = tick()
-
-
-
+													
 local UserInputService = game:GetService('UserInputService')
-
-local Last_Input = UserInputService:GetLastInputType()
-
-
-
-local Debris = game:GetService('Debris')
-
+													
+local ContentProvider = game:GetService('ContentProvider')
+													
+local TweenService = game:GetService('TweenService')
+													
+local HttpService = game:GetService('HttpService')
+													
+local TextService = game:GetService('TextService')
+													
 local RunService = game:GetService('RunService')
+													
+local Lighting = game:GetService('Lighting')
+													
+local CoreGui = game:GetService('CoreGui')
+													
+local Debris = game:GetService('Debris')
+													
+local GuiService = game:GetService('GuiService')
+													
+local VirtualInputManager = game:GetService('VirtualInputManager')')
 
-
-
+													
 local Vector2_Mouse_Location = nil
 
 local Grab_Parry = nil
