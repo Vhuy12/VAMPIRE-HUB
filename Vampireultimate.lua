@@ -1,215 +1,210 @@
+-- VampireUltimate_CoreLogic.lua -- Đã tối ưu cho Delta X/mobile
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Stats = game:GetService("Stats")
 local Workspace = game:GetService("Workspace")
-local Camera = Workspace.CurrentCamera
-local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
 
-local ConfigFolder = "VampireConfig"
-local ConfigFile = "VampireSettings.json"
-local HttpService = game:GetService("HttpService")
-local SavePath = ConfigFolder .. "/" .. ConfigFile
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local BallsFolder = Workspace:WaitForChild("Balls")
+local ParryRemote = ReplicatedStorage.Remotes:WaitForChild("ParryButtonPress")
+local AbilityRemote = ReplicatedStorage.Remotes:WaitForChild("AbilityButtonPress")
+local CurveRemote = ReplicatedStorage.Remotes:FindFirstChild("CurveDirection")
 
-if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
-if not isfile(SavePath) then writefile(SavePath, HttpService:JSONEncode({})) end
+-- Toggle mặc định
+_G.AutoParry = _G.AutoParry or false
+_G.PingBased = true
+_G.PingBasedOffset = 0.05
+_G.BallSpeedCheck = true
+_G.ParryRangeMultiplier = 2
+_G.UseRage = false
+_G.ManualSpam = false
+_G.AutoSpam = false
+_G.AutoCurve = false
+_G.Triggerbot = false
+_G.ESP = false
+_G.Fly = false
+_G.InfinityDetection = true
+_G.PhantomDetection = true
+_G.SlashOfFuryDetection = true
+_G.FOV = 25
+_G.ESP_Color = Color3.fromRGB(255, 0, 0)
+_G.FOVVisual = false
+_G.Visualize = false
+_G.SkinChanger = false
+_G.AntiVoid = false
 
-local defaultSettings = {
-    AutoParry = false,
-    SpamParry = false,
-    TriggerBot = false,
-    Fly = false,
-    Spinbot = false,
-    Strafe = false,
-    SlashDetect = false,
-    InfinityDetect = false,
-    PhantomDetect = false,
-    AntiStun = false,
-    AutoAbility = false,
-    CurveDetect = false,
-    Aimbot = false,
-    ESP = false,
-    BallESP = false,
-    HighlightPlayers = false,
-    ShowPingFPS = false,
-    ReflectAI = false,
-    PanicParry = false,
-    AutoQ = false,
-    SmartCooldown = false,
-    GUI = true,
-    MobileButtons = false,
-    AntiBan = true,
-    Key = Enum.KeyCode.F,
-    FOV = 100,
-    CustomFOV = false,
-    FakeHeadless = false,
-    FakeKorblox = false
-}
+LocalPlayer.CharacterAdded:Connect(function(char) Character = char end)
 
-local loadedSettings = {}
-pcall(function()
-    loadedSettings = HttpService:JSONDecode(readfile(SavePath))
-end)
-
-for k, v in pairs(defaultSettings) do
-    if loadedSettings[k] == nil then
-        loadedSettings[k] = v
-    end
-end
-
-getgenv().Vampire = loadedSettings
-
-spawn(function()
-    while task.wait(2) do
-        pcall(function()
-            writefile(SavePath, HttpService:JSONEncode(getgenv().Vampire))
-        end)
-    end
-end)
-
-if getgenv().Vampire.GUI then
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Vhuy12/VAMPIRE-HUB/refs/heads/main/Evil.lua"))()
+local function getPing()
+    local success, ping = pcall(function()
+        return Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000
     end)
+    return success and math.max(0.05, math.min(0.5, ping)) or 0.1
 end
 
-if getgenv().Vampire.AntiBan then
-    local old
-    old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-        if getnamecallmethod() == "FireServer" then
-            local name = tostring(self)
-            if name:find("Parry") or name:find("Remote") then
-                return nil
-            end
-        end
-        return old(self, ...)
-    end))
+local function sendParryClick()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 end
 
-RunService.Heartbeat:Connect(function()
-    local ball = Workspace:FindFirstChild("Balls") and Workspace.Balls:FindFirstChildWhichIsA("BasePart")
+local function Parry()
+    local abilities = Character and Character:FindFirstChild("Abilities")
+    if _G.UseRage and abilities and abilities:FindFirstChild("Raging Deflection") and abilities["Raging Deflection"].Enabled then
+        AbilityRemote:Fire()
+        task.wait(0)
+    end
+    ParryRemote:Fire()
+    sendParryClick()
+end
+
+local function VerifyBall(ball)
+    return ball and ball:IsA("BasePart") and ball:IsDescendantOf(BallsFolder) and ball:GetAttribute("realBall") == true
+end
+
+local function FindBall()
+    for _, v in ipairs(BallsFolder:GetChildren()) do
+        if VerifyBall(v) then return v end
+    end
+end
+
+local function IsTheTarget()
+    return Character and Character:FindFirstChild("Highlight")
+end
+
+-- AutoParry + Detection
+RunService.PreRender:Connect(function()
+    if not _G.AutoParry or not Character or not Character.PrimaryPart then return end
+    local ball = FindBall()
     if not ball then return end
-    if getgenv().Vampire.AutoParry and Player:DistanceFromCharacter(ball.Position) < 40 then
-        task.spawn(function()
-            VirtualInputManager:SendKeyEvent(true, getgenv().Vampire.Key, false, game)
-            VirtualInputManager:SendKeyEvent(false, getgenv().Vampire.Key, false, game)
-        end)
-    end
-    if getgenv().Vampire.SpamParry and ball.AssemblyLinearVelocity.Magnitude > 90 then
-        task.spawn(function()
-            VirtualInputManager:SendKeyEvent(true, getgenv().Vampire.Key, false, game)
-            VirtualInputManager:SendKeyEvent(false, getgenv().Vampire.Key, false, game)
-        end)
+    local velocity = ball.AssemblyLinearVelocity.Magnitude
+    if _G.BallSpeedCheck and velocity < 5 then return end
+    local ping = _G.PingBased and getPing() or 0
+    local distance = (ball.Position - Character.PrimaryPart.Position).Magnitude
+    local range = ((_G.PingBasedOffset or 0.05) + (velocity / math.pi)) * (_G.ParryRangeMultiplier or 2)
+    local name = tostring(ball)
+    if _G.InfinityDetection and name:lower():find("infinity") then return Parry() end
+    if _G.SlashOfFuryDetection and name:lower():find("slash") then return Parry() end
+    if _G.PhantomDetection and ball:FindFirstChild("Tail") then return Parry() end
+    if distance <= range and IsTheTarget() then Parry() end
+end)
+
+-- AutoSpam
+spawn(function()
+    while true do
+        if _G.AutoSpam then
+            ParryRemote:Fire()
+            sendParryClick()
+        end
+        task.wait(0.035)
     end
 end)
 
+-- ManualSpam
 UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and getgenv().Vampire.TriggerBot then
-        local target = Workspace.Alive:FindFirstChildWhichIsA("Model")
-        if target and Player:DistanceFromCharacter(target:GetPivot().Position) < 20 then
-            VirtualInputManager:SendKeyEvent(true, getgenv().Vampire.Key, false, game)
-            VirtualInputManager:SendKeyEvent(false, getgenv().Vampire.Key, false, game)
+    if _G.ManualSpam and input.KeyCode == Enum.KeyCode.E then
+        for _ = 1, 8 do
+            ParryRemote:Fire()
+            sendParryClick()
+            task.wait(0.05)
         end
     end
 end)
 
-RunService.RenderStepped:Connect(function()
-    if getgenv().Vampire.Aimbot and Camera then
-        local nearest, closest = nil, math.huge
-        for _, b in ipairs(Workspace.Balls:GetChildren()) do
-            if b:IsA("BasePart") then
-                local dist = (Camera.CFrame.Position - b.Position).Magnitude
-                if dist < closest then
-                    closest = dist
-                    nearest = b
+-- AutoCurve
+spawn(function()
+    while true do
+        if _G.AutoCurve and CurveRemote then
+            local dir = math.random(1,2)==1 and "Left" or "Right"
+            CurveRemote:FireServer(dir)
+        end
+        task.wait(0.75)
+    end
+end)
+
+-- Triggerbot
+spawn(function()
+    while true do
+        if _G.Triggerbot then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (plr.Character.HumanoidRootPart.Position - Character.PrimaryPart.Position).Magnitude
+                    if dist < 15 then Parry() end
                 end
             end
         end
-        if nearest then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, nearest.Position)
+        task.wait(0.25)
+    end
+end)
+
+-- ESP sử dụng Highlight (hỗ trợ mobile, Delta X)
+spawn(function()
+    while true do
+        if _G.ESP then
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character and not plr.Character:FindFirstChild("ESP_High") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "ESP_High"
+                    highlight.Adornee = plr.Character
+                    highlight.FillColor = _G.ESP_Color
+                    highlight.OutlineColor = Color3.new(1,1,1)
+                    highlight.Parent = plr.Character
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Đã bỏ Drawing API (FOV Circle) và SelectionSphere (Visualize Ball) để tránh lỗi executor mobile
+
+-- SkinChanger (nếu bị lỗi MeshId thì bỏ đoạn này)
+spawn(function()
+    while true do
+        if _G.SkinChanger and Character then
+            local head = Character:FindFirstChild("Head")
+            local leftLeg = Character:FindFirstChild("LeftLowerLeg")
+            local rightLeg = Character:FindFirstChild("RightLowerLeg")
+            if head then
+                head.Transparency = 1
+            end
+            -- Nếu lỗi MeshId thì comment 2 dòng dưới
+            if leftLeg then
+                pcall(function()
+                    leftLeg.MeshId = "902942093"
+                end)
+            end
+            if rightLeg then
+                pcall(function()
+                    rightLeg.MeshId = "902942093"
+                end)
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Fly
+local flyToggle = false
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if input.KeyCode == Enum.KeyCode.F and _G.Fly then
+        flyToggle = not flyToggle
+    end
+end)
+RunService.RenderStepped:Connect(function()
+    if flyToggle and Character and Character:FindFirstChild("HumanoidRootPart") then
+        Character:FindFirstChild("HumanoidRootPart").Velocity = Vector3.new(0, 50, 0)
+    end
+end)
+
+-- AntiVoid
+RunService.Stepped:Connect(function()
+    if _G.AntiVoid and Character and Character:FindFirstChild("HumanoidRootPart") then
+        if Character.HumanoidRootPart.Position.Y < -10 then
+            Character:SetPrimaryPartCFrame(CFrame.new(0, 50, 0))
         end
     end
 end)
-
-RunService.RenderStepped:Connect(function()
-    if getgenv().Vampire.ESP then
-        for _, v in ipairs(Workspace:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name:lower():find("ball") and not v:FindFirstChild("SelectionBox") then
-                local box = Instance.new("SelectionBox")
-                box.Adornee = v
-                box.Color3 = Color3.fromRGB(0, 255, 0)
-                box.LineThickness = 0.05
-                box.Parent = v
-            end
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if getgenv().Vampire.Fly and Character:FindFirstChild("HumanoidRootPart") then
-        Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if getgenv().Vampire.Spinbot then
-        Character.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(15), 0)
-    end
-end)
-
-local toggle = true
-RunService.RenderStepped:Connect(function()
-    if getgenv().Vampire.Strafe then
-        local offset = toggle and Vector3.new(1, 0, 0) or Vector3.new(-1, 0, 0)
-        Character.HumanoidRootPart.CFrame *= CFrame.new(offset / 5)
-        toggle = not toggle
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if getgenv().Vampire.CustomFOV then
-        Camera.FieldOfView = getgenv().Vampire.FOV
-    end
-end)
-
-if getgenv().Vampire.FakeHeadless and Character:FindFirstChild("Head") then
-    Character.Head.Transparency = 1
-end
-
-if getgenv().Vampire.FakeKorblox and Character:FindFirstChild("RightLowerLeg") then
-    Character.RightLowerLeg.Size = Vector3.new(0.1, 0.1, 0.1)
-    Character.RightLowerLeg.Transparency = 1
-end
-
-if getgenv().Vampire.MobileButtons then
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "VampireSpamGUI"
-    gui.ResetOnSpawn = false
-    gui.Parent = Player:WaitForChild("PlayerGui")
-
-    local spamButton = Instance.new("TextButton")
-    spamButton.Size = UDim2.new(0, 130, 0, 50)
-    spamButton.Position = UDim2.new(1, -140, 1, -70)
-    spamButton.AnchorPoint = Vector2.new(1, 1)
-    spamButton.Text = "MANUAL SPAM"
-    spamButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    spamButton.TextColor3 = Color3.new(1, 1, 1)
-    spamButton.Font = Enum.Font.GothamBold
-    spamButton.TextSize = 16
-    spamButton.AutoButtonColor = true
-    spamButton.Parent = gui
-
-    local function manualSpam()
-        task.spawn(function()
-            for i = 1, 20 do
-                VirtualInputManager:SendKeyEvent(true, getgenv().Vampire.Key, false, game)
-                VirtualInputManager:SendKeyEvent(false, getgenv().Vampire.Key, false, game)
-                task.wait(0.025)
-            end
-        end)
-    end
-
-    spamButton.MouseButton1Click:Connect(manualSpam)
-end
