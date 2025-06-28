@@ -2701,22 +2701,9 @@ end
 
 
 
-local Airflow = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"))();
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeE4X-dev/Library/refs/heads/main/FluentRemake.lua"))()
 
-
-
-local Window = Airflow:Init({
-
-	Name = "Vampire Test Version",
-
-	Keybind = "LeftControl",
-
-	Logo = "https://pin.it/1GlDfwtfQ",
-
-});
-
-
-
+local Window = Fluent:CreateWindow({ Title = "Vampire test version", SubTitle = "by Kurayami", TabWidth = 160, Size = UDim2.fromOffset(530, 310), Acrylic = false, Theme = "Aqua", MinimizeKey = Enum.KeyCode.LeftControl })
 local Blatant = Window:DrawTab({
 
 	Name = "Blatant",
