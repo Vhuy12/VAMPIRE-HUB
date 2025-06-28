@@ -1,6 +1,5 @@
---!strict repeat task.wait() until game:IsLoaded()
 
--- Load Fluent UI (giữ nguyên link của bạn)
+repeat wait() until game:IsLoaded()
 local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeE4X-dev/Library/refs/heads/main/FluentRemake.lua"))()
 
 local Window = Fluent:CreateWindow({ 
@@ -19,16 +18,15 @@ local Tabs = {
     Special = Window:AddTab({ Title = "Special", Icon = "star" }), 
     Visual = Window:AddTab({ Title = "Visual", Icon = "eye" }) 
 }
-
 Window:SelectTab(1)
-
 Tabs.Discord:AddParagraph({ Title = "Discord", Content = "https://discord.gg/xqbpKmSs" })
 Tabs.Discord:AddButton({ Title = "Copy Invite Link", Description = "Copy Discord invite to clipboard", Callback = function() setclipboard("https://discord.gg/xqbpKmSs") end })
 
--- ========== CORE LOGIC (Mobile-Optimized, chỉ dùng Highlight, không Drawing) ==========
+-- ================== CORE LOGIC ==================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 _G.AutoParry = false
 _G.AutoSpam = false
@@ -38,67 +36,102 @@ _G.ESP = false
 _G.Fly = false
 _G.AntiVoid = false
 _G.SkinChanger = false
+_G.CurveDirection = "Left"
 
--- AutoParry
+-------------------------
+-- Auto Parry
 local autoParryConn
 function enableAutoParry()
     if autoParryConn then return end
     autoParryConn = RunService.Heartbeat:Connect(function()
-        -- AutoParry logic ở đây
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name == "Bullet" and v:FindFirstChild("creator") then
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    if (v.Position - char.HumanoidRootPart.Position).Magnitude < 15 then
+                        -- Giả lập ấn phím F (parry)
+                        keypress(0x46)
+                        task.wait(0.03)
+                        keyrelease(0x46)
+                    end
+                end
+            end
+        end
     end)
 end
 function disableAutoParry()
     if autoParryConn then autoParryConn:Disconnect() autoParryConn = nil end
 end
 
--- AutoSpam
+-------------------------
+-- Auto Spam
 local autoSpamConn
 function enableAutoSpam()
     if autoSpamConn then return end
     autoSpamConn = RunService.Heartbeat:Connect(function()
-        -- AutoSpam logic
+        mouse1press()
+        task.wait(0.03)
+        mouse1release()
     end)
 end
 function disableAutoSpam()
     if autoSpamConn then autoSpamConn:Disconnect() autoSpamConn = nil end
 end
 
--- ManualSpam
+-------------------------
+-- Manual Spam (ấn Q để spam chuột)
 local manualSpamConn
 function enableManualSpam()
     if manualSpamConn then return end
-    manualSpamConn = RunService.Heartbeat:Connect(function()
-        -- ManualSpam logic
+    manualSpamConn = UserInputService.InputBegan:Connect(function(input, gp)
+        if gp then return end
+        if input.KeyCode == Enum.KeyCode.Q then
+            mouse1press()
+            task.wait(0.03)
+            mouse1release()
+        end
     end)
 end
 function disableManualSpam()
     if manualSpamConn then manualSpamConn:Disconnect() manualSpamConn = nil end
 end
 
--- AutoCurve
+-------------------------
+-- Auto Curve (chỉ ví dụ: giữ phím A hoặc D, có thể mở rộng)
 local autoCurveConn
 function enableAutoCurve()
     if autoCurveConn then return end
     autoCurveConn = RunService.Heartbeat:Connect(function()
-        -- AutoCurve logic
+        if _G.CurveDirection == "Left" then
+            keypress(0x41) -- A
+            task.wait(0.05)
+            keyrelease(0x41)
+        elseif _G.CurveDirection == "Right" then
+            keypress(0x44) -- D
+            task.wait(0.05)
+            keyrelease(0x44)
+        end
     end)
 end
 function disableAutoCurve()
     if autoCurveConn then autoCurveConn:Disconnect() autoCurveConn = nil end
 end
 
+-------------------------
 -- ESP (Highlight)
 local highlightTable = {}
 function enableESP()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "VAMPIRE_HUB_ESP"
-            highlight.FillColor = Color3.fromRGB(255,0,0)
-            highlight.OutlineColor = Color3.fromRGB(255,255,255)
-            highlight.Parent = player.Character
-            highlight.Adornee = player.Character
-            highlightTable[player] = highlight
+            if not player.Character:FindFirstChild("VAMPIRE_HUB_ESP") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "VAMPIRE_HUB_ESP"
+                highlight.FillColor = Color3.fromRGB(255,0,0)
+                highlight.OutlineColor = Color3.fromRGB(255,255,255)
+                highlight.Parent = player.Character
+                highlight.Adornee = player.Character
+                highlightTable[player] = highlight
+            end
         end
     end
     Players.PlayerAdded:Connect(function(player)
@@ -124,6 +157,7 @@ function disableESP()
     highlightTable = {}
 end
 
+-------------------------
 -- Fly
 local flyConn
 function enableFly()
@@ -152,14 +186,16 @@ function disableFly()
     end
 end
 
--- AntiVoid
+-------------------------
+-- Anti Void
 local antiVoidConn
 function enableAntiVoid()
     if antiVoidConn then return end
     antiVoidConn = RunService.Heartbeat:Connect(function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            if LocalPlayer.Character.HumanoidRootPart.Position.Y < -10 then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0,50,0)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            if char.HumanoidRootPart.Position.Y < -10 then
+                char.HumanoidRootPart.CFrame = CFrame.new(0,50,0)
             end
         end
     end)
@@ -168,10 +204,12 @@ function disableAntiVoid()
     if antiVoidConn then antiVoidConn:Disconnect() antiVoidConn = nil end
 end
 
--- SkinChanger (ví dụ: đổi màu nhân vật)
+-------------------------
+-- Skin Changer (đổi màu nhân vật)
 function enableSkinChanger()
-    if LocalPlayer.Character then
-        for _,v in ipairs(LocalPlayer.Character:GetChildren()) do
+    local char = LocalPlayer.Character
+    if char then
+        for _,v in ipairs(char:GetChildren()) do
             if v:IsA("BasePart") then
                 v.Color = Color3.fromRGB(0,255,255)
             end
@@ -179,8 +217,9 @@ function enableSkinChanger()
     end
 end
 function disableSkinChanger()
-    if LocalPlayer.Character then
-        for _,v in ipairs(LocalPlayer.Character:GetChildren()) do
+    local char = LocalPlayer.Character
+    if char then
+        for _,v in ipairs(char:GetChildren()) do
             if v:IsA("BasePart") then
                 v.Color = Color3.fromRGB(255,255,255)
             end
@@ -188,8 +227,7 @@ function disableSkinChanger()
     end
 end
 
--- ========== GẮN LOGIC VÀO GUI GỐC CỦA BẠN ==========
-
+-- ================== KẾT NỐI VỚI GIAO DIỆN UI ==================
 Tabs.Balant:AddToggle("AutoParry", { Title = "Auto Parry", Default = false, Callback = function(v)
     _G.AutoParry = v
     if v then enableAutoParry() else disableAutoParry() end
@@ -200,10 +238,9 @@ Tabs.Balant:AddToggle("AutoSpam", { Title = "Auto Spam", Default = false, Callba
     if v then enableAutoSpam() else disableAutoSpam() end
 end })
 
-Tabs.Balant:AddToggle("ManualSpam", { Title = "Manual Spam", Default = false, Callback = function(v)
+Tabs.Balant:AddToggle("ManualSpam", { Title = "Manual Spam (Q)", Default = false, Callback = function(v)
     _G.ManualSpam = v
     if v then enableManualSpam() else disableManualSpam() end
-    -- Giữ nguyên phần giao diện ManualSpam nếu bạn muốn (code cũ ở đây)
 end })
 
 Tabs.Balant:AddToggle("AutoCurve", { Title = "Auto Curve", Default = false, Callback = function(v)
@@ -211,10 +248,9 @@ Tabs.Balant:AddToggle("AutoCurve", { Title = "Auto Curve", Default = false, Call
     if v then enableAutoCurve() else disableAutoCurve() end
 end })
 
--- Nếu bạn muốn giữ dropdown chọn hướng AutoCurve
 Tabs.Balant:AddDropdown("CurveDirection", { 
     Title = "Curve Direction", 
-    Values = {"Left", "Right", "Straight", "Up", "Backward", "Random"}, 
+    Values = {"Left", "Right"}, 
     Multi = false, 
     Default = 1, 
     Callback = function(v) 
@@ -222,8 +258,7 @@ Tabs.Balant:AddDropdown("CurveDirection", {
     end 
 })
 
-Tabs.Special:AddInput("SkinChanger", { Title = "Skin Changer", Default = "", Placeholder = "Enter skin name", Numeric = false, Callback = function(text)
-    _G.SkinChanger = text
+Tabs.Special:AddButton({ Title = "Change Skin", Description = "Đổi skin nhân vật (chỉ đổi màu)", Callback = function()
     enableSkinChanger()
 end })
 
@@ -242,6 +277,4 @@ Tabs.Visual:AddToggle("AntiVoid", { Title = "AntiVoid", Default = false, Callbac
     if enabled then enableAntiVoid() else disableAntiVoid() end
 end })
 
--- Nếu bạn có thêm toggle nào ở GUI gốc Evil.lua, cứ thêm logic enable/disable như hướng dẫn trên.
-
--- ===== END SCRIPT =====
+-- ================== KẾT THÚC ==================
