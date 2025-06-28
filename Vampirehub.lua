@@ -2701,7 +2701,7 @@ end
 
 
 
-local Airflow = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"))();
+local Airflow = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"))();
 
 
 
