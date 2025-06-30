@@ -326,3 +326,13 @@ MainTab:CreateToggle({
 		end
 	end
 })
+
+local MainTab = Window:CreateTab("Main")
+
+MainTab:CreateToggle({
+	Name = "Test Toggle",
+	Default = false,
+	Callback = function(state)
+		print("Toggle state:", state)
+	end
+})
