@@ -1,315 +1,195 @@
-local AirflowURL = "https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"
-local AirflowLib = loadstring(game:HttpGet(AirflowURL, true))()
+local AirflowLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"))()
 if not AirflowLib then return end
 
 local Window = AirflowLib:Init({
-	Name = "Celestia",
+	Name = "Vampire test version",
 	Keybind = "LeftControl",
-	Logo = "http://www.roblox.com/asset/?id=94220348785476",
 })
-
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local Workspace = game:GetService("Workspace")
-
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
 getgenv().vampire = getgenv().vampire or {}
 local vampire = getgenv().vampire
-vampire.Enabled = true
-vampire.AutoParry = true
-vampire.Triggerbot = false
-vampire.Spinbot = false
-vampire.Fly = false
-vampire.MobileMode = false
+vampire.AutoParry = false
+vampire.AutoSpam = false
+vampire.ParryAccuracy = 70
+vampire.ParryThreshold = 1.5
 
-local DiscordTab = Window:CreateTab("Our Discord", 4483362458)
-DiscordTab:CreateButton({
-	Name = "Copy Discord Link",
+local DiscordTab = Window:DrawTab({
+	Name = "Our Discord",
+	Icon = "message-square"
+})
+
+local DiscordSection = DiscordTab:AddSection({
+	Name = "Support",
+	Position = "left"
+})
+
+DiscordSection:AddButton({
+	Name = "Click here to Copy Discord Link",
+	FullWidth = true,
 	Callback = function()
-		setclipboard("https://discord.gg/yourserver")
+		setclipboard("https://discord.gg/MghwMJHX")
+		AirflowLib:Notify({
+			Title = "Discord",
+			Content = "Link Copied!",
+			Duration = 5
+		})
 	end
 })
 
-local MainTab = Window:CreateTab("Main", 6031075938)
+local Tab = Window:DrawTab({
+	Name = "Main",
+	Icon = "swords"
+})
 
-MainTab:CreateToggle({
+local Left = Tab:AddSection({
+	Name = "Auto Parry",
+	Position = "left"
+})
+
+local Right = Tab:AddSection({
+	Name = "Auto Spam",
+	Position = "right"
+})
+
+Left:AddToggle({
 	Name = "Auto Parry",
 	Default = vampire.AutoParry,
-	Callback = function(state)
-		vampire.AutoParry = state
-	end
+	Callback = function(v)
+		vampire.AutoParry = v
+	end,
 })
 
-MainTab:CreateToggle({
-	Name = "Triggerbot",
-	Default = vampire.Triggerbot,
-	Callback = function(state)
-		vampire.Triggerbot = state
-	end
+Left:AddSlider({
+	Name = "Parry Accuracy",
+	Min = 1,
+	Max = 100,
+	Decimals = 0,
+	Default = vampire.ParryAccuracy,
+	Callback = function(v)
+		vampire.ParryAccuracy = v
+	end,
 })
 
-MainTab:CreateToggle({
-	Name = "Spam Parry",
-	Default = vampire.SpamParry or false,
-	Callback = function(state)
-		vampire.SpamParry = state
-		if state then
-			startSpamParry()
-		else
-			stopSpamParry()
+Right:AddToggle({
+	Name = "Auto Spam Parry",
+	Default = vampire.AutoSpam,
+	Callback = function(v)
+		vampire.AutoSpam = v
+	end,
+})
+
+Right:AddSlider({
+	Name = "Parry Threshold",
+	Min = 1,
+	Max = 3,
+	Decimals = 1,
+	Default = vampire.ParryThreshold,
+	Callback = function(v)
+		vampire.ParryThreshold = v
+	end,
+})
+
+--// CORE LOGIC (ĐÃ FIX)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
+local Stats = game:GetService("Stats")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Player = Players.LocalPlayer
+local Balls = workspace:WaitForChild("Balls")
+
+local ShouldPlayerJump = ReplicatedStorage.Remotes:WaitForChild("ShouldPlayerJump")
+local MainRemote = ReplicatedStorage.Remotes:WaitForChild("MainRemote")
+local GetOpponentPosition = ReplicatedStorage.Remotes:WaitForChild("GetOpponentPosition")
+
+-- Thay bằng giá trị thực nếu bạn có
+local HashOne = "RbdCUz"
+local HashTwo = "o9Wiyc"
+local HashThree = "5ebU4s"
+local ParryKey = "F"
+
+local Parries = 0
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+local function GetBall()
+	for _, ball in ipairs(Balls:GetChildren()) do
+		if ball:GetAttribute("realBall") then
+			return ball
 		end
 	end
-})
-
-MainTab:CreateToggle({
-	Name = "Fly",
-	Default = vampire.Fly,
-	Callback = function(state)
-		vampire.Fly = state
-		if state then
-			startFly()
-		else
-			stopFly()
-		end
-	end
-})
-
-MainTab:CreateToggle({
-	Name = "Spinbot",
-	Default = vampire.Spinbot,
-	Callback = function(state)
-		vampire.Spinbot = state
-		if state then
-			startSpinbot()
-		else
-			stopSpinbot()
-		end
-	end
-})
-
-MainTab:CreateToggle({
-	Name = "Mobile Mode",
-	Default = vampire.MobileMode,
-	Callback = function(state)
-		vampire.MobileMode = state
-		if state then
-			createMobileButton()
-		else
-			removeMobileButton()
-		end
-	end
-})
-
-MainTab:CreateToggle({
-	Name = "Headless",
-	Default = vampire.Headless or false,
-	Callback = function(state)
-		vampire.Headless = state
-		if state then
-			applyHeadless()
-		else
-			removeHeadless()
-		end
-	end
-})
-
-MainTab:CreateToggle({
-	Name = "Korblox",
-	Default = vampire.Korblox or false,
-	Callback = function(state)
-		vampire.Korblox = state
-		if state then
-			applyKorblox()
-		else
-			removeKorblox()
-		end
-	end
-})
-
-local function getPing()
-	local stats = LocalPlayer:FindFirstChild("NetworkStats")
-	if stats then
-		local pingValue = stats:FindFirstChild("Data Ping")
-		if pingValue then
-			local ping = tonumber(pingValue:GetValue():match("%d+"))
-			return ping or 0
-		end
-	end
-	return 0
+	return nil
 end
 
-local function getClosestBall()
-	local closest, distance = nil, math.huge
-	for _, ball in pairs(Workspace:GetChildren()) do
-		if ball:IsA("BasePart") and ball.Name == "Ball" then
-			local mag = (ball.Position - HumanoidRootPart.Position).Magnitude
-			if mag < distance then
-				distance = mag
-				closest = ball
-			end
+local function Parry()
+	if isMobile then
+		local hotbar = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Hotbar")
+		if hotbar and hotbar:FindFirstChild("Block") then
+			hotbar.Block:Activate()
 		end
+	else
+		ShouldPlayerJump:FireServer(HashOne, ParryKey)
+		MainRemote:FireServer(HashTwo, ParryKey)
+		GetOpponentPosition:FireServer(HashThree, ParryKey)
 	end
-	return closest
 end
 
-local function isBallComing(ball)
-	if not ball or not ball:IsA("BasePart") then return false end
-	local velocity = ball.Velocity
-	local direction = (HumanoidRootPart.Position - ball.Position).Unit
-	return velocity:Dot(direction) > 0.5
-end
-
-local function canParry()
-	local hotbar = LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("Hotbar")
-	if not hotbar then return true end
-	local cooldown = hotbar:FindFirstChild("Cooldown")
-	return cooldown and cooldown.Size.X.Scale <= 0
-end
-
-local function parry()
-	local args = {
-		[1] = "Parry"
-	}
-	ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ParryButtonPress"):FireServer(unpack(args))
+local function GetParryAccuracy(speed)
+	local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 10
+	local cappedSpeedDiff = math.clamp(speed - 9.5, 0, 650)
+	local base = 2.4 + cappedSpeedDiff * 0.002
+	local multiplier = 0.7 + (vampire.ParryAccuracy - 1) * (0.35 / 99)
+	local divisor = base * multiplier
+	return ping + math.max(speed / divisor, 9.5)
 end
 
 RunService.Heartbeat:Connect(function()
-	if not vampire.Enabled or not vampire.AutoParry then return end
-	local ball = getClosestBall()
-	if ball and isBallComing(ball) and canParry() then
-		local distance = (ball.Position - HumanoidRootPart.Position).Magnitude
-		local ping = getPing()
-		local delay = (distance / ball.Velocity.Magnitude) - (ping / 1000)
-		task.delay(delay, function()
-			if vampire.AutoParry and isBallComing(ball) and canParry() then
-				parry()
-			end
-		end)
-	end
-end)
+	if not vampire.AutoParry then return end
 
-RunService.RenderStepped:Connect(function()
-	if not vampire.Enabled or not vampire.Triggerbot then return end
-	local target = Mouse.Target
-	if target and target:IsA("BasePart") and target.Name == "Ball" then
-		if isBallComing(target) and canParry() then
-			parry()
+	local ball = GetBall()
+	if not ball then return end
+
+	local zoomies = ball:FindFirstChild("zoomies")
+	if not zoomies then return end
+
+	local velocity = zoomies.VectorVelocity
+	local speed = velocity.Magnitude
+	local distance = (Player.Character.PrimaryPart.Position - ball.Position).Magnitude
+	local accuracy = GetParryAccuracy(speed)
+
+	if ball:GetAttribute("target") == tostring(Player) and distance <= accuracy then
+		if Parries <= vampire.ParryThreshold then
+			Parry()
+			Parries += 1
+			task.delay(0.5, function()
+				if Parries > 0 then Parries -= 1 end
+			end)
 		end
 	end
 end)
 
-local spamConnection
-function startSpamParry()
-	if spamConnection then return end
-	spamConnection = RunService.Heartbeat:Connect(function()
-		if vampire.Enabled and vampire.SpamParry and canParry() then
-			parry()
-		end
-	end)
-end
+RunService.Heartbeat:Connect(function()
+	if not vampire.AutoSpam then return end
 
-function stopSpamParry()
-	if spamConnection then
-		spamConnection:Disconnect()
-		spamConnection = nil
-	end
-end
+	local ball = GetBall()
+	if not ball then return end
 
-local flyConnection
-function startFly()
-	if flyConnection then return end
-	flyConnection = RunService.RenderStepped:Connect(function()
-		if vampire.Enabled and vampire.Fly and HumanoidRootPart then
-			HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
-		end
-	end)
-end
+	local zoomies = ball:FindFirstChild("zoomies")
+	if not zoomies then return end
 
-function stopFly()
-	if flyConnection then
-		flyConnection:Disconnect()
-		flyConnection = nil
-	end
-end
+	local velocity = zoomies.VectorVelocity
+	local speed = velocity.Magnitude
+	local distance = (Player.Character.PrimaryPart.Position - ball.Position).Magnitude
+	local accuracy = GetParryAccuracy(speed)
 
-local spinConnection
-function startSpinbot()
-	if spinConnection then return end
-	spinConnection = RunService.RenderStepped:Connect(function()
-		if vampire.Enabled and vampire.Spinbot and HumanoidRootPart then
-			HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(15), 0)
-		end
-	end)
-end
-
-function stopSpinbot()
-	if spinConnection then
-		spinConnection:Disconnect()
-		spinConnection = nil
-	end
-end
-
-local mobileButton
-function createMobileButton()
-	if mobileButton then return end
-	mobileButton = Instance.new("TextButton")
-	mobileButton.Size = UDim2.new(0, 100, 0, 40)
-	mobileButton.Position = UDim2.new(0.5, -50, 1, -60)
-	mobileButton.AnchorPoint = Vector2.new(0.5, 1)
-	mobileButton.Text = "Parry"
-	mobileButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
-	mobileButton.TextColor3 = Color3.new(1, 1, 1)
-	mobileButton.Font = Enum.Font.GothamBold
-	mobileButton.TextSize = 18
-	mobileButton.Parent = CoreGui
-	mobileButton.MouseButton1Click:Connect(function()
-		if vampire.Enabled and vampire.MobileMode and canParry() then
-			parry()
-		end
-	end)
-end
-
-function removeMobileButton()
-	if mobileButton then
-		mobileButton:Destroy()
-		mobileButton = nil
-	end
-end
-
-function applyHeadless()
-	local head = Character:FindFirstChild("Head")
-	if head then
-		head.Transparency = 1
-		local face = head:FindFirstChildOfClass("Decal")
-		if face then
-			face.Transparency = 1
+	if ball:GetAttribute("target") == tostring(Player) and distance <= accuracy then
+		if Parries > vampire.ParryThreshold then
+			Parry()
 		end
 	end
-end
+end)
 
-function removeHeadless()
-	local head = Character:FindFirstChild("Head")
-	if head then
-		head.Transparency = 0
-		local face = head:FindFirstChildOfClass("Decal")
-		if face then
-			face.Transparency = 0
-		end
-	end
-end
-
-function applyKorblox()
-	local leg = Character:FindFirstChild("RightLowerLeg") or Character:FindFirstChild("RightLeg")
-	if leg then
-		leg.Transparency = 1
-	end
-end
-
-function removeKorblox()
-	local leg = Character:FindFirstChild("RightLowerLeg") or Character:
+Balls.ChildRemoved:Connect(function()
+	Parries = 0
+end)
