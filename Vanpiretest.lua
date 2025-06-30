@@ -4,7 +4,7 @@ local AirflowLib = loadstring(game:HttpGet(AirflowURL, true))()
 if not AirflowLib then return end
 
 local Window = AirflowLib:Init({
-	Name = "Celestia",
+	Name = "Vampire test version",
 	Keybind = "LeftControl",
 	Logo = "http://www.roblox.com/asset/?id=94220348785476",
 })
