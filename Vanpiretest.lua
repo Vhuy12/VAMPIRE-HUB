@@ -748,6 +748,7 @@ if not AirflowLib then return end
 local Window = AirflowLib:Init({
         Name = "Vampire test version",
         Keybind = "LeftControl",
+	Logo = "http://www.roblox.com/asset/?id=97624744584100",						
 })
 
 local Blatant = Window:DrawTab({
