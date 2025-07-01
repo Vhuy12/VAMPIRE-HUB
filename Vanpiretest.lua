@@ -756,11 +756,11 @@ toggleButton.Size = UDim2.new(0, 60, 0, 60)
 toggleButton.Position = UDim2.new(1, -70, 1, -70)
 toggleButton.AnchorPoint = Vector2.new(1, 1)
 toggleButton.BackgroundTransparency = 1
-toggleButton.Image = "http://www.roblox.com/asset/?id=97624744584100"
+toggleButton.Image = "http://www.roblox.com/asset/?id=138269886201011"
 toggleButton.Parent = toggleGui
 
 local uiVisible = true
-local targetName = "Airflow"
+local targetName = "Vampire test version"
 
 toggleButton.MouseButton1Click:Connect(function()
     uiVisible = not uiVisible
@@ -774,7 +774,7 @@ end)
 local Window = AirflowLib:Init({
         Name = "Vampire test version",
         Keybind = "LeftControl",
-	Logo = "http://www.roblox.com/asset/?id=97624744584100",						
+	Logo = "http://www.roblox.com/asset/?id=138269886201011",						
 })
 
 local Blatant = Window:DrawTab({
