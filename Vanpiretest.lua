@@ -82,9 +82,9 @@ LPH_NO_VIRTUALIZE(function()
     for Index, Value in next, getgc() do
         if rawequal(typeof(Value), "function") and islclosure(Value) and getrenv().debug.info(Value, "s"):find("SwordsController") then
             if rawequal(getrenv().debug.info(Value, "l"), 276) then
-                HashOne = "ebe24a"
-                HashTwo = "vMySDy"
-                HashThree = "b_IDQ5"
+                HashOne = getconstant(Value, 62)
+                HashTwo = getconstant(Value, 64)
+                HashThree = getconstant(Value, 65)
             end
         end 
     end
@@ -841,7 +841,7 @@ module:AddToggle({
                     if Phantom and Player.Character:FindFirstChild('ParryHighlight') and getgenv().PhantomV2Detection then
                     --Controls:Disable()
 
-                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D)
+                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.UserInputType.Touch)
 
                     Player.Character.Humanoid.WalkSpeed = 36
                     Player.Character.Humanoid:MoveTo(Ball.Position)
@@ -1538,7 +1538,7 @@ local Spinbot = player:AddSection({
 	Name = "Spinbot",
 	Position = "right",
 });
-						
+
 Spinbot:AddToggle({
     Name = "Spinbot",
     Callback = function(value)
@@ -1589,7 +1589,7 @@ Spinbot:AddSlider({
         getgenv().spinSpeed = math.rad(value)
     end
 })
-						
+
 local FieldOfView = player:AddSection({
 	Name = "Field of View",
 	Position = "left",
@@ -2043,12 +2043,6 @@ HitSounds:AddDropdown({
 })
 
 ReplicatedStorage.Remotes.ParrySuccess.OnClientEvent:Connect(function()
-    if hit_Sound_Enabled then
-        hit_Sound:Play()
-    end
-end)
-
-Replicated(_, root)
     if hit_Sound_Enabled then
         hit_Sound:Play()
     end
