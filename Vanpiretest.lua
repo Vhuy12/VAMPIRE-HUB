@@ -1538,51 +1538,58 @@ local Spinbot = player:AddSection({
 	Name = "Spinbot",
 	Position = "right",
 });
-
-local spinCoroutine = nil
-
+						
 Spinbot:AddToggle({
     Name = "Spinbot",
     Callback = function(value)
         getgenv().Spinbot = value
-        getgenv().spin = value
-
         if value then
-            getgenv().spinSpeed = getgenv().spinSpeed or math.rad(20)
-            if spinCoroutine and coroutine.status(spinCoroutine) ~= "dead" then
-                return
-            end
+            getgenv().spin = true
+            getgenv().spinSpeed = getgenv().spinSpeed or 1 
             local Players = game:GetService("Players")
             local RunService = game:GetService("RunService")
             local Client = Players.LocalPlayer
 
-            spinCoroutine = coroutine.create(function()
+            
+            local function spinCharacter()
                 while getgenv().spin do
                     RunService.Heartbeat:Wait()
                     local char = Client.Character
                     local funcHRP = char and char:FindFirstChild("HumanoidRootPart")
+                    
                     if char and funcHRP then
-                        funcHRP.CFrame = funcHRP.CFrame * CFrame.Angles(0, getgenv().spinSpeed, 0)
+                        funcHRP.CFrame *= CFrame.Angles(0, getgenv().spinSpeed, 0)
                     end
                 end
-            end)
-            coroutine.resume(spinCoroutine)
+            end
+
+            
+            if not getgenv().spinThread then
+                getgenv().spinThread = coroutine.create(spinCharacter)
+                coroutine.resume(getgenv().spinThread)
+            end
+
         else
             getgenv().spin = false
+
+            
+            if getgenv().spinThread then
+                getgenv().spinThread = nil
+            end
         end
     end
 })
 
 Spinbot:AddSlider({
-    Name = "Speed",
+	Name = "Speed",
     Min = 1,
-    Max = 100,
-    Default = 20,
-    Callback = function(value)
+	Max = 100,
+	Default = 1,
+	Callback = function(value)
         getgenv().spinSpeed = math.rad(value)
     end
 })
-
+						
 local FieldOfView = player:AddSection({
 	Name = "Field of View",
 	Position = "left",
