@@ -1972,7 +1972,21 @@ Fly:AddSlider({
 local HitSounds = player:AddSection({
 	Name = "Hit Sounds",
 	Position = "right",
+});
+
+HitSounds:AddToggle({
+    Name = "Hit Sounds",
+    Callback = function(value)
+        hit_Sound_Enabled = value
+    end
 })
+
+local Folder = Instance.new("Folder")
+Folder.Name = "Useful Utility"
+Folder.Parent = workspace
+
+local hit_Sound = Instance.new('Sound', Folder)
+hit_Sound.Volume = 6
 
 local hitSoundOptions = { 
     "Medal", 
@@ -1990,6 +2004,7 @@ local hitSoundOptions = {
     "Saber", 
     "Bameware"
 }
+
 local hitSoundIds = {
     Medal = "rbxassetid://6607336718",
     Fatality = "rbxassetid://6607113255",
@@ -2007,23 +2022,6 @@ local hitSoundIds = {
     Bameware = "rbxassetid://3124331820"
 }
 
-local Folder = workspace:FindFirstChild("Useful Utility") or Instance.new("Folder")
-Folder.Name = "Useful Utility"
-Folder.Parent = workspace
-
-local hit_Sound = Folder:FindFirstChild("HitSound") or Instance.new("Sound")
-hit_Sound.Name = "HitSound"
-hit_Sound.Parent = Folder
-hit_Sound.Volume = 6
-
-local hit_Sound_Enabled = false
-HitSounds:AddToggle({
-    Name = "Hit Sounds",
-    Callback = function(value)
-        hit_Sound_Enabled = value
-    end
-})
-
 HitSounds:AddSlider({
     Name = "Hit Sound Volume",
     Min = 0,
@@ -2037,7 +2035,6 @@ HitSounds:AddSlider({
 HitSounds:AddDropdown({
     Name = "Hit Sound",
     Options = hitSoundOptions,
-    Default = "Medal",
     Callback = function(selectedOption)
         if hitSoundIds[selectedOption] then
             hit_Sound.SoundId = hitSoundIds[selectedOption]
