@@ -744,6 +744,32 @@ end
 
 local AirflowLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Airflow/refs/heads/main/src/source.luau"))()
 if not AirflowLib then return end
+	local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "ToggleUI"
+toggleGui.ResetOnSpawn = false
+toggleGui.IgnoreGuiInset = true
+toggleGui.Parent = game:GetService("CoreGui")
+
+local toggleButton = Instance.new("ImageButton")
+toggleButton.Name = "ToggleUIButton"
+toggleButton.Size = UDim2.new(0, 60, 0, 60)
+toggleButton.Position = UDim2.new(1, -70, 1, -70)
+toggleButton.AnchorPoint = Vector2.new(1, 1)
+toggleButton.BackgroundTransparency = 1
+toggleButton.Image = "http://www.roblox.com/asset/?id=97624744584100"
+toggleButton.Parent = toggleGui
+
+local uiVisible = true
+local targetName = "Airflow"
+
+toggleButton.MouseButton1Click:Connect(function()
+    uiVisible = not uiVisible
+    for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name:find(targetName) and gui ~= toggleGui then
+            gui.Enabled = uiVisible
+        end
+    end
+end)					
 
 local Window = AirflowLib:Init({
         Name = "Vampire test version",
