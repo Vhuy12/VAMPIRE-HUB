@@ -782,27 +782,27 @@ end
 
 local function autoSaveConfig()
     local config = {
-        AutoParryKeypress = getgenv().AutoParryKeypress or false,
-        SpamParryKeypress = getgenv().SpamParryKeypress or false,
-        ManualSpamKeypress = getgenv().ManualSpamKeypress or false,
-        TriggerbotKeypress = getgenv().TriggerbotKeypress or false,
-        RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled or false,
-        InfinityDetection = getgenv().InfinityDetection or false,
-        Selected_Parry_Type = Selected_Parry_Type or "Camera",
-        ParryThreshold = ParryThreshold or 2.5,
-        CameraFOV = getgenv().CameraFOV or 70,
-        Spinbot = getgenv().Spinbot or false,
+        AutoParryKeypress = getgenv().AutoParryKeypress,
+        SpamParryKeypress = getgenv().SpamParryKeypress,
+        ManualSpamKeypress = getgenv().ManualSpamKeypress,
+        TriggerbotKeypress = getgenv().TriggerbotKeypress,
+        RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled,
+        InfinityDetection = getgenv().InfinityDetection,
+        Selected_Parry_Type = Selected_Parry_Type,
+        ParryThreshold = ParryThreshold,
+        CameraFOV = getgenv().CameraFOV,
+        Spinbot = getgenv().Spinbot,
         SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
     }
 
-    writefile("VampireHubConfigs/AutoSave.json", HttpService:JSONEncode(config))
+    writefile("VampireHubConfigs/AutoSave.json", game:GetService("HttpService"):JSONEncode(config))
 end
 
 local function autoLoadConfig()
     local path = "VampireHubConfigs/AutoSave.json"
     if not isfile(path) then return end
 
-    local data = HttpService:JSONDecode(readfile(path))
+    local data = game:GetService("HttpService"):JSONDecode(readfile(path))
 
     getgenv().AutoParryKeypress = data.AutoParryKeypress
     getgenv().SpamParryKeypress = data.SpamParryKeypress
@@ -815,8 +815,6 @@ local function autoLoadConfig()
     getgenv().CameraFOV = data.CameraFOV
     getgenv().Spinbot = data.Spinbot
     getgenv().spinSpeed = math.rad(data.SpinSpeed)
-
-    notify("Config", "✅ Auto config loaded!")
 end
 
 autoLoadConfig()
