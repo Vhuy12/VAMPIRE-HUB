@@ -2422,76 +2422,33 @@ function disableSmoothMode()
 	end
 end
 
-local swordFXData = {}
+local noRenderEnabled = false
 
-local section = misc:AddSection({
-	Name = "No Render",
-	Position = "left"
-})
-
-section:AddToggle({
-	Name = "No Render (Disable FX/SFX)",
-	Callback = function(state)
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			player.CharacterAdded:Connect(function(char)
-				task.wait(1)
-				for _, obj in ipairs(char:GetDescendants()) do
-					if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-						if state then
-							swordFXData[obj] = true
-							obj.Enabled = false
-						else
-							obj.Enabled = true
-							obj.Brightness = 3
-							if obj:IsA("Trail") then
-								obj.Lifetime = 1
-								obj.MinLength = 0.1
-								obj.MaxLength = 20
-							end
-						end
-					elseif obj:IsA("Sound") and obj.Name:lower():find("slash") then
-						if state then
-							swordFXData[obj] = obj.Volume
-							obj.Volume = 0
-						else
-							obj.Volume = 2
-						end
-					end
+local function handleSwordEffects(tool, enabled)
+	for _, obj in ipairs(tool:GetDescendants()) do
+		if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Sound") or obj:IsA("Beam") or obj:IsA("PointLight") or obj:IsA("Attachment") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+			if enabled then
+				-- Khôi phục FX
+				local originalParent = obj:GetAttribute("OriginalParent")
+				if originalParent and typeof(originalParent) == "Instance" then
+					obj.Parent = originalParent
+					obj:SetAttribute("OriginalParent", nil)
 				end
-			end)
-		end
-
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			local char = player.Character
-			if char then
-				for _, obj in ipairs(char:GetDescendants()) do
-					if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-						if state then
-							swordFXData[obj] = true
-							obj.Enabled = false
-						else
-							obj.Enabled = true
-							obj.Brightness = 3
-							if obj:IsA("Trail") then
-								obj.Lifetime = 1
-								obj.MinLength = 0.1
-								obj.MaxLength = 20
-							end
-						end
-					elseif obj:IsA("Sound") and obj.Name:lower():find("slash") then
-						if state then
-							swordFXData[obj] = obj.Volume
-							obj.Volume = 0
-						else
-							obj.Volume = 2
-						end
-					end
+			else
+		
+				if not obj:GetAttribute("OriginalParent") then
+					obj:SetAttribute("OriginalParent", obj.Parent)
+					obj.Parent = nil
 				end
 			end
 		end
+	end
+end
 
-		if not state then
-			table.clear(swordFXData)
+local function updateAllSwordsEffects(enabled)
+	for _, tool in ipairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+		if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+			handleSwordEffects(tool, enabled)
 		end
 	end
-})
+						end
