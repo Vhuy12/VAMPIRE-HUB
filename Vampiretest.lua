@@ -2389,14 +2389,6 @@ local noRenderSection = misc:AddSection({
 	Position = "left"
 })
 
-noRender:AddToggle({
-	Name = "No Render",
-	Default = false,
-	Callback = function(state)
-		noRenderEnabled = state
-		updateAllSwordsEffects(not state)
-	end
-})
 local function handleSwordEffects(tool, enabled)
 	for _, obj in ipairs(tool:GetDescendants()) do
 		if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Sound")
@@ -2435,3 +2427,11 @@ game.Players.LocalPlayer.Character.ChildAdded:Connect(function(child)
 	end
 end)
 
+misc:AddToggle({
+	Name = "No Render (Hide Sword FX)",
+	Default = false,
+	Callback = function(state)
+		noRenderEnabled = state
+		updateAllSwordsEffects(not state)
+	end
+})
