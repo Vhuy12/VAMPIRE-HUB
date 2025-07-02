@@ -754,9 +754,6 @@ local Window = AirflowLib:Init({
 local Credits = Window:DrawTab({
 	Name = "Credits",
 	Icon = "home"
-}local Credits = Window:DrawTab({
-	Name = "Credits",
-	Icon = "home"
 })
 
 local section = Credits:AddSection({
