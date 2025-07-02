@@ -2165,3 +2165,117 @@ local Balls = workspace:WaitForChild('Balls')
 Balls.ChildRemoved:Connect(function()
     Phantom = false
 end)
+
+-- ⚙️ Biến trạng thái và kết nối
+local espEnabled = false
+local espConnections = {}
+
+-- 🧹 Hàm xóa toàn bộ ESP
+local function clearESP()
+	for _, player in pairs(game.Players:GetPlayers()) do
+		if player.Character and player.Character:FindFirstChild("Head") then
+			local old = player.Character.Head:FindFirstChild("AbilityESP")
+			if old then
+				old:Destroy()
+			end
+		end
+	end
+	for _, conn in pairs(espConnections) do
+		conn:Disconnect()
+	end
+	espConnections = {}
+end
+
+local function createAbilityESP(player)
+	if player == game.Players.LocalPlayer then
+		return
+	end
+
+	local char = player.Character
+	if not char or not char:FindFirstChild("Head") then
+		return
+	end
+
+	local oldESP = char.Head:FindFirstChild("AbilityESP")
+	if oldESP then
+		oldESP:Destroy()
+	end
+
+	local abilityName = nil
+	local abilities = char:FindFirstChild("Abilities")
+
+	if abilities then
+		for _, ability in pairs(abilities:GetChildren()) do
+			if ability:IsA("BoolValue") and ability.Value == true then
+				abilityName = ability.Name
+				break
+			end
+		end
+	end
+
+	if not abilityName then
+		abilityName = player:GetAttribute("EquippedAbility") or "No Ability"
+	end
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "AbilityESP"
+	gui.Size = UDim2.new(0, 200, 0, 30)
+	gui.StudsOffset = Vector3.new(0, 3, 0)
+	gui.AlwaysOnTop = true
+	gui.Parent = char.Head
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = player.Name .. " (" .. abilityName .. ")"
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextStrokeTransparency = 0.5
+	label.TextScaled = false
+	label.TextSize = 12
+	label.Font = Enum.Font.Gotham
+	label.Parent = gui
+end
+
+function enableAbilityESP()
+	for _, player in pairs(game.Players:GetPlayers()) do
+		if player ~= game.Players.LocalPlayer then
+			if player.Character then
+				createAbilityESP(player)
+			end
+
+			local conn = player.CharacterAdded:Connect(function()
+				task.wait(1)
+				createAbilityESP(player)
+			end)
+
+			table.insert(espConnections, conn)
+		end
+	end
+
+	local conn = game.Players.PlayerAdded:Connect(function(player)
+		local charConn = player.CharacterAdded:Connect(function()
+			task.wait(1)
+			createAbilityESP(player)
+		end)
+		table.insert(espConnections, charConn)
+	end)
+
+	table.insert(espConnections, conn)
+end
+
+local AbilityESPSection = world:AddSection({
+	Name = "Ability ESP",
+	Position = "left"
+})
+
+AbilityESPSection:AddToggle({
+	Name = "Ability ESP",
+	Callback = function(value)
+		espEnabled = value
+		if value then
+			enableAbilityESP()
+		else
+			clearESP()
+		end
+	end
+})
