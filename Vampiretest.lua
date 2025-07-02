@@ -2407,7 +2407,7 @@ end
 
 function disableSmoothMode()
 	local lighting = game:GetService("Lighting")
-	lighting.Brightness = 2
+	lighting.Brightness = 1.5
 	lighting.ClockTime = 14
 	lighting.ExposureCompensation = 0
 	lighting.GlobalShadows = false
@@ -2417,7 +2417,7 @@ function disableSmoothMode()
 		if obj:IsA("BasePart") then
 			obj.Material = Enum.Material.SmoothPlastic
 			obj.Reflectance = 0
-			obj.Color = Color3.fromRGB(200, 200, 200)
+			obj.Color = Color3.fromRGB(100, 100, 100)
 		end
 	end
 end
