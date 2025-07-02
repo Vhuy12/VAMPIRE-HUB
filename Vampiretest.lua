@@ -2382,60 +2382,33 @@ fpsSmoothSection:AddToggle({
 	end
 })
 
-function enableSmoothMode()
-	pcall(function()
-		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-	end)
-
-	local lighting = game:GetService("Lighting")
-	lighting.Brightness = 1
-	lighting.ClockTime = 13.5
-	lighting.ExposureCompensation = 0.1
-	lighting.GlobalShadows = false
-	lighting.FogEnd = 1e9
-
-	for _, obj in ipairs(game:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.Material = Enum.Material.SmoothPlastic
-			obj.Reflectance = 0
-			obj.Color = Color3.fromRGB(60, 60, 60)
-		elseif obj:IsA("Texture") or obj:IsA("Decal") then
-			obj:Destroy()
-		end
-	end
-end
-
-function disableSmoothMode()
-	local lighting = game:GetService("Lighting")
-	lighting.Brightness = 1.5
-	lighting.ClockTime = 14
-	lighting.ExposureCompensation = 0
-	lighting.GlobalShadows = false
-	lighting.FogEnd = 1e9
-
-	for _, obj in ipairs(game:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.Material = Enum.Material.SmoothPlastic
-			obj.Reflectance = 0
-			obj.Color = Color3.fromRGB(100, 100, 100)
-		end
-	end
-end
-
 local noRenderEnabled = false
 
+local noRenderSection = misc:AddSection({
+	Name = "No Render",
+	Position = "left"
+})
+
+noRender:AddToggle({
+	Name = "No Render",
+	Default = false,
+	Callback = function(state)
+		noRenderEnabled = state
+		updateAllSwordsEffects(not state)
+	end
+})
 local function handleSwordEffects(tool, enabled)
 	for _, obj in ipairs(tool:GetDescendants()) do
-		if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Sound") or obj:IsA("Beam") or obj:IsA("PointLight") or obj:IsA("Attachment") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+		if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Sound")
+		or obj:IsA("Beam") or obj:IsA("PointLight") or obj:IsA("Attachment")
+		or obj:IsA("Fire") or obj:IsA("Sparkles") then
 			if enabled then
-				-- Khôi phục FX
 				local originalParent = obj:GetAttribute("OriginalParent")
 				if originalParent and typeof(originalParent) == "Instance" then
 					obj.Parent = originalParent
 					obj:SetAttribute("OriginalParent", nil)
 				end
 			else
-		
 				if not obj:GetAttribute("OriginalParent") then
 					obj:SetAttribute("OriginalParent", obj.Parent)
 					obj.Parent = nil
@@ -2446,9 +2419,19 @@ local function handleSwordEffects(tool, enabled)
 end
 
 local function updateAllSwordsEffects(enabled)
-	for _, tool in ipairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+	local char = game.Players.LocalPlayer.Character
+	if not char then return end
+	for _, tool in ipairs(char:GetChildren()) do
 		if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
 			handleSwordEffects(tool, enabled)
 		end
 	end
-						end
+end
+
+game.Players.LocalPlayer.Character.ChildAdded:Connect(function(child)
+	if noRenderEnabled and child:IsA("Tool") and child:FindFirstChild("Handle") then
+		task.wait(0.2)
+		handleSwordEffects(child, false)
+	end
+end)
+
