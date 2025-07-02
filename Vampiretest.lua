@@ -875,7 +875,7 @@ local module = Blatant:AddSection({
 module:AddToggle({
 	Name = "Auto Parry",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         if value then
             Connections_Manager['Auto Parry'] = RunService.PreSimulation:Connect(function()
                 local One_Ball = Auto_Parry.Get_Ball()
@@ -1048,8 +1048,7 @@ module:AddSlider({
 	Max = 100,
 	Default = 100, -- optional, defaults to Min if not set
 	Callback = function(value)
-	autoLoadConfig()
-	autoLoadConfig()
+	autoSaveConfig()
 		Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
 	end
 })
@@ -1080,7 +1079,7 @@ module:AddDropdown({
 	Multi = false,
 	Default = "Camera",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         Selected_Parry_Type = parryTypeMap[value] or value
     end
 })
@@ -1088,7 +1087,7 @@ module:AddDropdown({
 module:AddToggle({
 	Name = "Random Parry Accuracy",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         getgenv().RandomParryAccuracyEnabled = value
     end
 })
@@ -1096,7 +1095,7 @@ module:AddToggle({
 module:AddToggle({
 	Name = "Infinity Detection",
 	Callback = function(value)
-        autoLoadConfig()
+        autoSaveConfig()
         getgenv().InfinityDetection = value
     end
 })
@@ -1104,7 +1103,7 @@ module:AddToggle({
 module:AddToggle({
 	Name = "Keypress",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         getgenv().AutoParryKeypress = value
     end
 })
@@ -1117,7 +1116,7 @@ local SpamParry = Blatant:AddSection({
 SpamParry:AddToggle({
 	Name = "Auto Spam Parry",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         if value then
             Connections_Manager['Auto Spam'] = RunService.PreSimulation:Connect(function()
                 local Ball = Auto_Parry.Get_Ball()
@@ -1205,7 +1204,7 @@ SpamParry:AddDropdown({
 	Multi = false,
 	Default = "Legit",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
 
     end
 })
@@ -1216,7 +1215,7 @@ SpamParry:AddSlider({
 	Max = 3,
 	Default = 2.5, -- optional, defaults to Min if not set
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
 		ParryThreshold = value
 	end
 })
@@ -1225,7 +1224,7 @@ if not isMobile then
     SpamParry:AddToggle({
         Name = "Animation Fix",
         Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
             if value then
                 Connections_Manager['Animation Fix'] = RunService.PreSimulation:Connect(function()
                     local Ball = Auto_Parry.Get_Ball()
@@ -1304,7 +1303,7 @@ end
 SpamParry:AddToggle({
     Name = "Keypress",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().SpamParryKeypress = value
     end
 })
@@ -1317,7 +1316,7 @@ local ManualSpam = Blatant:AddSection({
 ManualSpam:AddToggle({
 	Name = "Manual Spam Parry",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         if value then
             Connections_Manager['Manual Spam'] = RunService.PreSimulation:Connect(function()
                 if getgenv().spamui then
@@ -1344,7 +1343,7 @@ if isMobile then
     ManualSpam:AddToggle({
 	Name = "UI",
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         getgenv().spamui = value
 
         if value then
@@ -1420,7 +1419,7 @@ end
 ManualSpam:AddToggle({
     Name = "Keypress",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().ManualSpamKeypress = value
     end
 })
@@ -1433,7 +1432,7 @@ local Triggerbot = Blatant:AddSection({
 Triggerbot:AddToggle({
     Name = "Triggerbot",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         if value then
             Connections_Manager['Triggerbot'] = RunService.PreSimulation:Connect(function()
                 local Balls = Auto_Parry.Get_Balls()
@@ -1490,7 +1489,7 @@ Triggerbot:AddToggle({
 Triggerbot:AddToggle({
     Name = "Infinity Detection",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().TriggerbotInfinityDetection = value
     end
 })
@@ -1498,7 +1497,7 @@ Triggerbot:AddToggle({
 Triggerbot:AddToggle({
     Name = "Keypress",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().TriggerbotKeypress = value
     end
 })
@@ -1511,7 +1510,7 @@ local LobbyAP = Blatant:AddSection({
 LobbyAP:AddToggle({
     Name = "Lobby Auto Parry",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         if value then
             Connections_Manager['Lobby AP'] = RunService.Heartbeat:Connect(function()
                 local Ball = Auto_Parry.Lobby_Balls()
@@ -1578,7 +1577,7 @@ module:AddToggle({
 	Max = 100,
 	Default = 100,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         PhantomV2Detection = value
     end
 })
@@ -1589,7 +1588,7 @@ LobbyAP:AddSlider({
 	Max = 100,
 	Default = 100,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
 		LobbyAP_Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
 	end
 })
@@ -1597,7 +1596,7 @@ LobbyAP:AddSlider({
 LobbyAP:AddToggle({
     Name = "Random Parry Accuracy",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().LobbyAPRandomParryAccuracyEnabled = value
     end
 })
@@ -1605,7 +1604,7 @@ LobbyAP:AddToggle({
 LobbyAP:AddToggle({
     Name = "Keypress",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().LobbyAPKeypress = value
     end
 })
@@ -1618,7 +1617,7 @@ local Strafe = player:AddSection({
 Strafe:AddToggle({
     Name = "Strafe",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         if value then
             Connections_Manager['Strafe'] = game:GetService("RunService").PreSimulation:Connect(function()
                 local character = game.Players.LocalPlayer.Character
@@ -1646,7 +1645,7 @@ Strafe:AddSlider({
 	Max = 200,
 	Default = 36,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         StrafeSpeed = value
     end
 })
@@ -1659,7 +1658,7 @@ local Spinbot = player:AddSection({
 Spinbot:AddToggle({
     Name = "Spinbot",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().Spinbot = value
         if value then
             getgenv().spin = true
@@ -1704,7 +1703,7 @@ Spinbot:AddSlider({
 	Max = 100,
 	Default = 1,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         getgenv().spinSpeed = math.rad(value)
     end
 })
@@ -1717,7 +1716,7 @@ local FieldOfView = player:AddSection({
 FieldOfView:AddToggle({
     Name = "Field of View",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         getgenv().CameraEnabled = value
         local Camera = game:GetService("Workspace").CurrentCamera
 
@@ -1749,7 +1748,7 @@ FieldOfView:AddSlider({
 	Max = 150,
 	Default = 70,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
         getgenv().CameraFOV = value
         if getgenv().CameraEnabled then
             game:GetService("Workspace").CurrentCamera.FieldOfView = value
@@ -1767,7 +1766,7 @@ _G.PlayerCosmeticsCleanup = {}
 PlayerCosmetics:AddToggle({
     Name = "Player Cosmetics",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         local players = game:GetService("Players")
         local lp = players.LocalPlayer
 
@@ -2101,7 +2100,7 @@ local HitSounds = player:AddSection({
 HitSounds:AddToggle({
     Name = "Hit Sounds",
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         hit_Sound_Enabled = value
     end
 })
@@ -2152,7 +2151,7 @@ HitSounds:AddSlider({
     Max = 10,
     Default = 6,
     Callback = function(value)
-    autoLoadConfig()
+    autoSaveConfig()
         hit_Sound.Volume = value
     end
 })
@@ -2404,7 +2403,7 @@ AbilityESPSection:AddToggle({
 	Name = "Ability ESP",
 	Default = false,
 	Callback = function(value)
-	autoLoadConfig()
+	autoSaveConfig()
 		espEnabled = value
 		if value then
 			enableAbilityESP()
