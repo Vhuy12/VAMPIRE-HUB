@@ -2338,3 +2338,68 @@ VisualFilterSection:AddSlider({
 	end
 })
 
+local fpsBoostEnabled = false
+
+local fpsSection = world:AddSection({
+	Name = "FPS Booster",
+	Position = "left"
+})
+
+fpsSection:AddToggle({
+	Name = "Enable FPS Booster",
+	Callback = function(state)
+		fpsBoostEnabled = state
+		if state then
+			enableFPSBoost()
+		else
+			disableFPSBoost()
+		end
+	end
+})
+
+function enableFPSBoost()
+	local lighting = game:GetService("Lighting")
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 100000
+	lighting.Brightness = 1
+
+	local terrain = workspace:FindFirstChildOfClass("Terrain")
+	if terrain then
+		terrain.WaterWaveSize = 0
+		terrain.WaterWaveSpeed = 0
+		terrain.WaterReflectance = 0
+		terrain.WaterTransparency = 1
+		terrain.Decorations = false
+	end
+
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Texture") or obj:IsA("Decal") then
+			obj.Transparency = 1
+		elseif obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+		end
+	end
+end
+
+function disableFPSBoost()
+	local lighting = game:GetService("Lighting")
+	lighting.GlobalShadows = true
+	lighting.FogEnd = 1000
+	lighting.Brightness = 2
+
+	local terrain = workspace:FindFirstChildOfClass("Terrain")
+	if terrain then
+		terrain.WaterWaveSize = 0.1
+		terrain.WaterWaveSpeed = 10
+		terrain.WaterReflectance = 0.05
+		terrain.WaterTransparency = 0.3
+		terrain.Decorations = true
+	end
+
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Texture") or obj:IsA("Decal") then
+			obj.Transparency = 0
+		end
+	end
+end
