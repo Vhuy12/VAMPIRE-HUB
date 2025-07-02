@@ -2166,18 +2166,15 @@ Balls.ChildRemoved:Connect(function()
     Phantom = false
 end)
 
--- ⚙️ Biến trạng thái và kết nối
 local espEnabled = false
 local espConnections = {}
 
--- 🧹 Hàm xóa toàn bộ ESP
 local function clearESP()
 	for _, player in pairs(game.Players:GetPlayers()) do
-		if player.Character and player.Character:FindFirstChild("Head") then
-			local old = player.Character.Head:FindFirstChild("AbilityESP")
-			if old then
-				old:Destroy()
-			end
+		local char = player.Character
+		if char and char:FindFirstChild("Head") then
+			local esp = char.Head:FindFirstChild("AbilityESP")
+			if esp then esp:Destroy() end
 		end
 	end
 	for _, conn in pairs(espConnections) do
@@ -2186,73 +2183,84 @@ local function clearESP()
 	espConnections = {}
 end
 
-local function createAbilityESP(player)
-	if player == game.Players.LocalPlayer then
-		return
-	end
-
+local function getAbilityName(player)
 	local char = player.Character
-	if not char or not char:FindFirstChild("Head") then
-		return
-	end
+	if not char then return "No Character" end
 
-	local oldESP = char.Head:FindFirstChild("AbilityESP")
-	if oldESP then
-		oldESP:Destroy()
-	end
-
-	local abilityName = nil
 	local abilities = char:FindFirstChild("Abilities")
-
 	if abilities then
-		for _, ability in pairs(abilities:GetChildren()) do
-			if ability:IsA("BoolValue") and ability.Value == true then
-				abilityName = ability.Name
-				break
+		for _, ability in ipairs(abilities:GetChildren()) do
+			if ability:IsA("BoolValue") and ability.Value then
+				return ability.Name
 			end
 		end
 	end
 
-	if not abilityName then
-		abilityName = player:GetAttribute("EquippedAbility") or "No Ability"
-	end
+	return player:GetAttribute("EquippedAbility") or "No Ability"
+end
+
+local function createAbilityESP(player)
+	if player == game.Players.LocalPlayer then return end
+
+	local char = player.Character
+	if not char or not char:FindFirstChild("Head") then return end
+	local head = char.Head
+
+	local old = head:FindFirstChild("AbilityESP")
+	if old then old:Destroy() end
 
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "AbilityESP"
 	gui.Size = UDim2.new(0, 200, 0, 30)
 	gui.StudsOffset = Vector3.new(0, 3, 0)
 	gui.AlwaysOnTop = true
-	gui.Parent = char.Head
+	gui.Parent = head
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
-	label.Text = player.Name .. " (" .. abilityName .. ")"
 	label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	label.TextStrokeTransparency = 0.5
 	label.TextScaled = false
 	label.TextSize = 12
 	label.Font = Enum.Font.Gotham
+	label.Text = player.Name .. " (" .. getAbilityName(player) .. ")"
 	label.Parent = gui
+
+	local lastText = ""
+	local runConn = game:GetService("RunService").Heartbeat:Connect(function()
+		if not label or not label.Parent then
+			runConn:Disconnect()
+			return
+		end
+
+		local newText = player.Name .. " (" .. getAbilityName(player) .. ")"
+		if newText ~= lastText then
+			label.Text = newText
+			lastText = newText
+		end
+	end)
+
+	table.insert(espConnections, runConn)
 end
 
-function enableAbilityESP()
-	for _, player in pairs(game.Players:GetPlayers()) do
+local function enableAbilityESP()
+	for _, player in ipairs(game.Players:GetPlayers()) do
 		if player ~= game.Players.LocalPlayer then
 			if player.Character then
 				createAbilityESP(player)
 			end
 
-			local conn = player.CharacterAdded:Connect(function()
+			local charConn = player.CharacterAdded:Connect(function()
 				task.wait(1)
 				createAbilityESP(player)
 			end)
 
-			table.insert(espConnections, conn)
+			table.insert(espConnections, charConn)
 		end
 	end
 
-	local conn = game.Players.PlayerAdded:Connect(function(player)
+	local playerConn = game.Players.PlayerAdded:Connect(function(player)
 		local charConn = player.CharacterAdded:Connect(function()
 			task.wait(1)
 			createAbilityESP(player)
@@ -2260,7 +2268,7 @@ function enableAbilityESP()
 		table.insert(espConnections, charConn)
 	end)
 
-	table.insert(espConnections, conn)
+	table.insert(espConnections, playerConn)
 end
 
 local AbilityESPSection = world:AddSection({
@@ -2269,7 +2277,8 @@ local AbilityESPSection = world:AddSection({
 })
 
 AbilityESPSection:AddToggle({
-	Name = "Ability ESP",
+	Name = "Show Ability ESP",
+	Default = false,
 	Callback = function(value)
 		espEnabled = value
 		if value then
