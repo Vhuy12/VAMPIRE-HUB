@@ -751,6 +751,37 @@ local Window = AirflowLib:Init({
 	Logo = "http://www.roblox.com/asset/?id=97624744584100",						
 })
 
+local Credits = Window:DrawTab({
+	Name = "Credits",
+	Icon = "home"
+}local Credits = Window:DrawTab({
+	Name = "Credits",
+	Icon = "home"
+})
+
+local section = Credits:AddSection({
+	Name = "Vampire Hub",
+	Position = "full"
+})
+
+section:AddParagraph({
+	Title = "Created by Kurayami",
+	Content = "Script developed by Kurayami and Discord: Vampire Hub"
+})
+
+section:AddButton({
+	Name = "Copy Discord Link",
+	Callback = function()
+		setclipboard("https://discord.gg/xqbpKmSs")
+		notify("Credits", "Discord link copied!", 3)
+	end
+})
+
+section:AddParagraph({
+	Title = "About Vampire hub",
+	Content = "Vampire hub is a script Blade ball powerful"
+})
+						
 local Blatant = Window:DrawTab({
 	Name = "Blatant",
 	Icon = "sword"
