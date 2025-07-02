@@ -782,16 +782,16 @@ end
 
 local function autoSaveConfig()
     local config = {
-        AutoParry = getgenv().AutoParryKeypress,
-        SpamParry = getgenv().SpamParryKeypress,
-        ManualSpam = getgenv().ManualSpamKeypress,
-        Triggerbot = getgenv().TriggerbotKeypress,
-        RandomAccuracy = getgenv().RandomParryAccuracyEnabled,
-        InfinityDetection = getgenv().InfinityDetection,
-        ParryType = Selected_Parry_Type,
-        ParryThreshold = ParryThreshold,
-        FOV = getgenv().CameraFOV,
-        Spinbot = getgenv().Spinbot,
+        AutoParryKeypress = getgenv().AutoParryKeypress or false,
+        SpamParryKeypress = getgenv().SpamParryKeypress or false,
+        ManualSpamKeypress = getgenv().ManualSpamKeypress or false,
+        TriggerbotKeypress = getgenv().TriggerbotKeypress or false,
+        RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled or false,
+        InfinityDetection = getgenv().InfinityDetection or false,
+        Selected_Parry_Type = Selected_Parry_Type or "Camera",
+        ParryThreshold = ParryThreshold or 2.5,
+        CameraFOV = getgenv().CameraFOV or 70,
+        Spinbot = getgenv().Spinbot or false,
         SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
     }
 
@@ -804,19 +804,19 @@ local function autoLoadConfig()
 
     local data = HttpService:JSONDecode(readfile(path))
 
-    getgenv().AutoParryKeypress = data.AutoParry
-    getgenv().SpamParryKeypress = data.SpamParry
-    getgenv().ManualSpamKeypress = data.ManualSpam
-    getgenv().TriggerbotKeypress = data.Triggerbot
-    getgenv().RandomParryAccuracyEnabled = data.RandomAccuracy
+    getgenv().AutoParryKeypress = data.AutoParryKeypress
+    getgenv().SpamParryKeypress = data.SpamParryKeypress
+    getgenv().ManualSpamKeypress = data.ManualSpamKeypress
+    getgenv().TriggerbotKeypress = data.TriggerbotKeypress
+    getgenv().RandomParryAccuracyEnabled = data.RandomParryAccuracyEnabled
     getgenv().InfinityDetection = data.InfinityDetection
-    Selected_Parry_Type = data.ParryType or "Camera"
-    ParryThreshold = data.ParryThreshold or 2.5
-    getgenv().CameraFOV = data.FOV or 70
+    Selected_Parry_Type = data.Selected_Parry_Type
+    ParryThreshold = data.ParryThreshold
+    getgenv().CameraFOV = data.CameraFOV
     getgenv().Spinbot = data.Spinbot
-    getgenv().spinSpeed = math.rad(data.SpinSpeed or 1)
+    getgenv().spinSpeed = math.rad(data.SpinSpeed)
 
-    notify("Config", "Auto config loaded!")
+    notify("Config", "✅ Auto config loaded!")
 end
 
 autoLoadConfig()
