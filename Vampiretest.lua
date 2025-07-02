@@ -2421,3 +2421,69 @@ function disableSmoothMode()
 		end
 	end
 end
+
+-- 📁 Config System Toàn Script
+local HttpService = game:GetService("HttpService")
+local configFileName = "VampireHubConfig.json"
+local configValues = {}
+local configCallbacks = {}
+
+function RegisterConfig(id, default, callback)
+	configValues[id] = configValues[id] or default
+	configCallbacks[id] = callback
+	return {
+		Default = configValues[id],
+		Callback = function(value)
+			configValues[id] = value
+			callback(value)
+		end
+	}
+end
+
+function SaveConfig()
+	local encoded = HttpService:JSONEncode(configValues)
+	pcall(function() writefile(configFileName, encoded) end)
+	if notify then notify("Config", "✅ Config saved!", 3) end
+end
+
+function LoadConfig()
+	if not isfile(configFileName) then return end
+	local success, data = pcall(function()
+		return HttpService:JSONDecode(readfile(configFileName))
+	end)
+	if success and typeof(data) == "table" then
+		for id, value in pairs(data) do
+			configValues[id] = value
+			if configCallbacks[id] then
+				pcall(function() configCallbacks[id](value) end)
+			end
+		end
+		if notify then notify("Config", "✅ Config loaded!", 3) end
+	end
+end
+
+local miscTab = window:CreateTab("Misc")
+local miscSection = miscTab:AddSection({ Name = "Settings", Position = "left" })
+
+miscSection:AddToggle(RegisterConfig("no_render", false, function(state)
+	noRenderEnabled = state
+	updateAllSwordsEffects(not state)
+end))
+
+miscSection:AddToggle(RegisterConfig("fps_booster", false, function(state)
+	if state then
+		enableFPSBooster()
+	else
+		disableFPSBooster()
+	end
+end))
+
+miscSection:AddButton({
+	Name = "Save Config",
+	Callback = SaveConfig
+})
+
+miscSection:AddButton({
+	Name = "Load Config",
+	Callback = LoadConfig
+})
