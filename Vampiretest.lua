@@ -2430,50 +2430,67 @@ local section = misc:AddSection({
 })
 
 section:AddToggle({
-	Name = "No Render",
+	Name = "No Render (Disable FX/SFX)",
 	Callback = function(state)
-		if state then
-			for _, player in ipairs(game.Players:GetPlayers()) do
-				local char = player.Character
-				if char then
-					for _, obj in ipairs(char:GetDescendants()) do
-						if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			player.CharacterAdded:Connect(function(char)
+				task.wait(1)
+				for _, obj in ipairs(char:GetDescendants()) do
+					if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+						if state then
 							swordFXData[obj] = true
 							obj.Enabled = false
-						elseif obj:IsA("Sound") and obj.Name:lower():find("slash") then
+						else
+							obj.Enabled = true
+							obj.Brightness = 3
+							if obj:IsA("Trail") then
+								obj.Lifetime = 1
+								obj.MinLength = 0.1
+								obj.MaxLength = 20
+							end
+						end
+					elseif obj:IsA("Sound") and obj.Name:lower():find("slash") then
+						if state then
 							swordFXData[obj] = obj.Volume
 							obj.Volume = 0
+						else
+							obj.Volume = 2
+						end
+					end
+				end
+			end)
+		end
+
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			local char = player.Character
+			if char then
+				for _, obj in ipairs(char:GetDescendants()) do
+					if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+						if state then
+							swordFXData[obj] = true
+							obj.Enabled = false
+						else
+							obj.Enabled = true
+							obj.Brightness = 3
+							if obj:IsA("Trail") then
+								obj.Lifetime = 1
+								obj.MinLength = 0.1
+								obj.MaxLength = 20
+							end
+						end
+					elseif obj:IsA("Sound") and obj.Name:lower():find("slash") then
+						if state then
+							swordFXData[obj] = obj.Volume
+							obj.Volume = 0
+						else
+							obj.Volume = 2
 						end
 					end
 				end
 			end
-		else
-			for obj in pairs(swordFXData) do
-				if obj and obj:IsDescendantOf(game) then
-					if obj:IsA("ParticleEmitter") then
-						obj.Enabled = true
-						obj.Rate = 200
-						obj.Speed = NumberRange.new(12, 16)
-						obj.Size = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0.8),
-							NumberSequenceKeypoint.new(1, 1.8)
-						})
-						obj.Brightness = 3
-					elseif obj:IsA("Trail") then
-						obj.Enabled = true
-						obj.Lifetime = 1
-						obj.MinLength = 0.1
-						obj.MaxLength = 25
-					elseif obj:IsA("Beam") then
-						obj.Enabled = true
-						obj.Width0 = 0.3
-						obj.Width1 = 0.3
-						obj.Brightness = 3
-					elseif obj:IsA("Sound") then
-						obj.Volume = 2
-					end
-				end
-			end
+		end
+
+		if not state then
 			table.clear(swordFXData)
 		end
 	end
