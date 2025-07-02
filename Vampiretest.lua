@@ -756,28 +756,7 @@ local Credits = Window:DrawTab({
 	Icon = "home"
 })
 
-local section = Credits:AddSection({
-	Name = "Vampire Hub",
-	Position = "full"
-})
 
-section:AddParagraph({
-	Title = "Created by Kurayami",
-	Content = "Script developed by Kurayami and Discord: Vampire Hub"
-})
-
-section:AddButton({
-	Name = "Copy Discord Link",
-	Callback = function()
-		setclipboard("https://discord.gg/xqbpKmSs")
-		notify("Credits", "Discord link copied!", 3)
-	end
-})
-
-section:AddParagraph({
-	Title = "About Vampire hub",
-	Content = "Vampire hub is a script Blade ball powerful"
-})
 						
 local Blatant = Window:DrawTab({
 	Name = "Blatant",
@@ -797,6 +776,29 @@ local world = Window:DrawTab({
 local misc = Window:DrawTab({
 	Name = "Misc",
 	Icon = "layers"
+})
+
+local section = Credits:AddSection({
+	Name = "Vampire Hub",
+	Position = "full"
+})
+
+section:AddParagraph({
+	Title = "Created by Kurayami",
+	Content = "Script developed by Kurayami and Discord: Vampire Hub"
+})
+
+section:AddButton({
+	Name = "Copy Discord Link",
+	Callback = function()
+		setclipboard("https://discord.gg/xqbpKmSs")
+		notify("Credits", "Discord link copied!")
+	end
+})
+
+section:AddParagraph({
+	Title = "About Vampire hub",
+	Content = "Vampire hub is a script Blade ball powerful"
 })
 
 local module = Blatant:AddSection({
@@ -2422,4 +2424,5 @@ function disableSmoothMode()
 			fx.Enabled = true
 		end
 	end
-						end
+end
+						
