@@ -766,11 +766,6 @@ local world = Window:DrawTab({
 	Icon = "globe"
 })
 
-local farm = Window:DrawTab({
-	Name = "Farm",
-	Icon = "wrap-text"
-})
-
 local misc = Window:DrawTab({
 	Name = "Misc",
 	Icon = "layers"
@@ -2357,49 +2352,29 @@ fpsSection:AddToggle({
 	end
 })
 
-function enableFPSBoost()
-	local lighting = game:GetService("Lighting")
-	lighting.GlobalShadows = false
-	lighting.FogEnd = 100000
-	lighting.Brightness = 1
+pcall(function()
+	settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+end)
 
-	local terrain = workspace:FindFirstChildOfClass("Terrain")
-	if terrain then
-		terrain.WaterWaveSize = 0
-		terrain.WaterWaveSpeed = 0
-		terrain.WaterReflectance = 0
-		terrain.WaterTransparency = 1
-		terrain.Decorations = false
-	end
+local lighting = game:GetService("Lighting")
+lighting.GlobalShadows = false
+lighting.Brightness = 1
+lighting.ClockTime = 13.5
+lighting.FogEnd = 1e9
+lighting.ExposureCompensation = 0.1
 
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Texture") or obj:IsA("Decal") then
-			obj.Transparency = 1
-		elseif obj:IsA("BasePart") then
-			obj.Material = Enum.Material.SmoothPlastic
-			obj.Reflectance = 0
-		end
+for _, obj in ipairs(game:GetDescendants()) do
+	if obj:IsA("BasePart") then
+		obj.Material = Enum.Material.SmoothPlastic
+		obj.Reflectance = 0
+		obj.Color = Color3.fromRGB(60, 60, 60) -- sáng hơn
+	elseif obj:IsA("Texture") or obj:IsA("Decal") then
+		obj:Destroy()
 	end
 end
 
-function disableFPSBoost()
-	local lighting = game:GetService("Lighting")
-	lighting.GlobalShadows = true
-	lighting.FogEnd = 1000
-	lighting.Brightness = 2
-
-	local terrain = workspace:FindFirstChildOfClass("Terrain")
-	if terrain then
-		terrain.WaterWaveSize = 0.1
-		terrain.WaterWaveSpeed = 10
-		terrain.WaterReflectance = 0.05
-		terrain.WaterTransparency = 0.3
-		terrain.Decorations = true
-	end
-
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Texture") or obj:IsA("Decal") then
-			obj.Transparency = 0
-		end
+for _, fx in ipairs(lighting:GetDescendants()) do
+	if fx:IsA("BlurEffect") or fx:IsA("SunRaysEffect") or fx:IsA("BloomEffect") or fx:IsA("ColorCorrectionEffect") then
+		fx.Enabled = false
 	end
 end
