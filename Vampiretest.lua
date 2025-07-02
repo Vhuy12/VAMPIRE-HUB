@@ -2317,10 +2317,10 @@ VisualFilterSection:AddSlider({
 
 VisualFilterSection:AddSlider({
 	Name = "Hue Shift",
-	Min = -0.05,
-	Max = 0.05,
+	Min = -180,
+	Max = 180,
 	Default = 0,
-	Increment = 0.01,
+	Increment = 1,
 	Callback = function(val)
 		local hue = (val % 360) / 360
 		ColorCorrection.TintColor = Color3.fromHSV(hue, 1, 1)
@@ -2338,19 +2338,3 @@ VisualFilterSection:AddSlider({
 	end
 })
 
-VisualFilterSection:AddDropdown({
-	Name = "Fog Color",
-	Options = { "Gray", "White", "Black", "Blue", "Red", "Green", "Purple" },
-	Callback = function(option)
-		local colors = {
-			Gray = Color3.fromRGB(170,170,170),
-			White = Color3.fromRGB(255,255,255),
-			Black = Color3.fromRGB(0,0,0),
-			Blue = Color3.fromRGB(85,170,255),
-			Red = Color3.fromRGB(255,85,85),
-			Green = Color3.fromRGB(85,255,85),
-			Purple = Color3.fromRGB(170,85,255),
-		}
-		Lighting.FogColor = colors[option] or Color3.fromRGB(170,170,170)
-	end
-})
