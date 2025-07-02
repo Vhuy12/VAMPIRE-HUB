@@ -776,45 +776,70 @@ local misc = Window:DrawTab({
 	Icon = "layers"
 })
 
-if not isfolder("VampireHubConfigs") then
-    makefolder("VampireHubConfigs")
+local HttpService = game:GetService("HttpService")
+local configFolder = "VampireHubConfigs"
+local configPath = configFolder.."/Vampire.json"
+
+if not isfolder(configFolder) then
+	makefolder(configFolder)
 end
 
-local function autoSaveConfig()
-    local config = {
-        AutoParryKeypress = getgenv().AutoParryKeypress,
-        SpamParryKeypress = getgenv().SpamParryKeypress,
-        ManualSpamKeypress = getgenv().ManualSpamKeypress,
-        TriggerbotKeypress = getgenv().TriggerbotKeypress,
-        RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled,
-        InfinityDetection = getgenv().InfinityDetection,
-        Selected_Parry_Type = Selected_Parry_Type,
-        ParryThreshold = ParryThreshold,
-        CameraFOV = getgenv().CameraFOV,
-        Spinbot = getgenv().Spinbot,
-        SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
-    }
-
-    writefile("VampireHubConfigs/AutoSave.json", game:GetService("HttpService"):JSONEncode(config))
+local function safeReadFile(path)
+	local success, data = pcall(readfile, path)
+	if success then
+		return data
+	else
+		return nil
+	end
 end
 
-local function autoLoadConfig()
-    local path = "VampireHubConfigs/AutoSave.json"
-    if not isfile(path) then return end
+local function safeWriteFile(path, data)
+	local success, err = pcall(writefile, path, data)
+end
 
-    local data = game:GetService("HttpService"):JSONDecode(readfile(path))
+local function getConfigTable()
+	return {
+		AutoParryKeypress = getgenv().AutoParryKeypress,
+		SpamParryKeypress = getgenv().SpamParryKeypress,
+		ManualSpamKeypress = getgenv().ManualSpamKeypress,
+		TriggerbotKeypress = getgenv().TriggerbotKeypress,
+		RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled,
+		InfinityDetection = getgenv().InfinityDetection,
+		Selected_Parry_Type = Selected_Parry_Type,
+		ParryThreshold = ParryThreshold,
+		CameraFOV = getgenv().CameraFOV,
+		Spinbot = getgenv().Spinbot,
+		SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
+	}
+end
 
-    getgenv().AutoParryKeypress = data.AutoParryKeypress
-    getgenv().SpamParryKeypress = data.SpamParryKeypress
-    getgenv().ManualSpamKeypress = data.ManualSpamKeypress
-    getgenv().TriggerbotKeypress = data.TriggerbotKeypress
-    getgenv().RandomParryAccuracyEnabled = data.RandomParryAccuracyEnabled
-    getgenv().InfinityDetection = data.InfinityDetection
-    Selected_Parry_Type = data.Selected_Parry_Type
-    ParryThreshold = data.ParryThreshold
-    getgenv().CameraFOV = data.CameraFOV
-    getgenv().Spinbot = data.Spinbot
-    getgenv().spinSpeed = math.rad(data.SpinSpeed)
+local function setConfigTable(data)
+	getgenv().AutoParryKeypress = data.AutoParryKeypress
+	getgenv().SpamParryKeypress = data.SpamParryKeypress
+	getgenv().ManualSpamKeypress = data.ManualSpamKeypress
+	getgenv().TriggerbotKeypress = data.TriggerbotKeypress
+	getgenv().RandomParryAccuracyEnabled = data.RandomParryAccuracyEnabled
+	getgenv().InfinityDetection = data.InfinityDetection
+	Selected_Parry_Type = data.Selected_Parry_Type
+	ParryThreshold = data.ParryThreshold
+	getgenv().CameraFOV = data.CameraFOV
+	getgenv().Spinbot = data.Spinbot
+	getgenv().spinSpeed = math.rad(data.SpinSpeed)
+end
+
+function autoSaveConfig()
+	local config = getConfigTable()
+	safeWriteFile(configPath, HttpService:JSONEncode(config))
+end
+
+function autoLoadConfig()
+	if not isfile(configPath) then return end
+	local data = safeReadFile(configPath)
+	if not data then return end
+	local success, decoded = pcall(HttpService.JSONDecode, HttpService, data)
+	if success and type(decoded) == "table" then
+		setConfigTable(decoded)
+	end
 end
 
 autoLoadConfig()
