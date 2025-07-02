@@ -2288,3 +2288,69 @@ AbilityESPSection:AddToggle({
 		end
 	end
 })
+
+local Lighting = game:GetService("Lighting")
+
+local ColorCorrection = Lighting:FindFirstChild("WorldColorFilter") or Instance.new("ColorCorrectionEffect", Lighting)
+ColorCorrection.Name = "WorldColorFilter"
+
+Lighting.FogStart = 0
+Lighting.FogEnd = 500
+Lighting.FogColor = Color3.fromRGB(170, 170, 170)
+
+local VisualFilterSection = world:AddSection({
+	Name = "Filter",
+	Position = "right"
+})
+
+VisualFilterSection:AddSlider({
+	Name = "Saturation",
+	Min = -1,
+	Max = 1,
+	Default = 0,
+	Increment = 0.05,
+	Callback = function(val)
+		ColorCorrection.Saturation = val
+	end
+})
+
+
+VisualFilterSection:AddSlider({
+	Name = "Hue Shift",
+	Min = -0.05,
+	Max = 0.05,
+	Default = 0,
+	Increment = 0.01,
+	Callback = function(val)
+		local hue = (val % 360) / 360
+		ColorCorrection.TintColor = Color3.fromHSV(hue, 1, 1)
+	end
+})
+
+VisualFilterSection:AddSlider({
+	Name = "Fog End Distance",
+	Min = 100,
+	Max = 1000,
+	Default = 500,
+	Increment = 25,
+	Callback = function(val)
+		Lighting.FogEnd = val
+	end
+})
+
+VisualFilterSection:AddDropdown({
+	Name = "Fog Color",
+	Options = { "Gray", "White", "Black", "Blue", "Red", "Green", "Purple" },
+	Callback = function(option)
+		local colors = {
+			Gray = Color3.fromRGB(170,170,170),
+			White = Color3.fromRGB(255,255,255),
+			Black = Color3.fromRGB(0,0,0),
+			Blue = Color3.fromRGB(85,170,255),
+			Red = Color3.fromRGB(255,85,85),
+			Green = Color3.fromRGB(85,255,85),
+			Purple = Color3.fromRGB(170,85,255),
+		}
+		Lighting.FogColor = colors[option] or Color3.fromRGB(170,170,170)
+	end
+})
