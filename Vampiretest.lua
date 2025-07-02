@@ -2272,7 +2272,7 @@ local AbilityESPSection = world:AddSection({
 })
 
 AbilityESPSection:AddToggle({
-	Name = "Show Ability ESP",
+	Name = "Ability ESP",
 	Default = false,
 	Callback = function(value)
 		espEnabled = value
@@ -2336,12 +2336,12 @@ VisualFilterSection:AddSlider({
 local fpsSmoothEnabled = false
 
 local fpsSmoothSection = world:AddSection({
-	Name = "FPS Booster Smooth",
+	Name = "FPS Booster",
 	Position = "left"
 })
 
 fpsSmoothSection:AddToggle({
-	Name = "Enable Smooth Mode",
+	Name = "FPS Booster",
 	Callback = function(state)
 		fpsSmoothEnabled = state
 		if state then
