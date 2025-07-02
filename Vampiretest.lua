@@ -2388,41 +2388,36 @@ function enableSmoothMode()
 	end)
 
 	local lighting = game:GetService("Lighting")
-	lighting.GlobalShadows = false
-	lighting.Brightness = 2
+	lighting.Brightness = 1
 	lighting.ClockTime = 13.5
+	lighting.ExposureCompensation = 0.1
+	lighting.GlobalShadows = false
 	lighting.FogEnd = 1e9
-	lighting.ExposureCompensation = 0.5
 
 	for _, obj in ipairs(game:GetDescendants()) do
 		if obj:IsA("BasePart") then
 			obj.Material = Enum.Material.SmoothPlastic
 			obj.Reflectance = 0
-			obj.Color = Color3.fromRGB(70, 70, 70)
+			obj.Color = Color3.fromRGB(60, 60, 60)
 		elseif obj:IsA("Texture") or obj:IsA("Decal") then
 			obj:Destroy()
-		end
-	end
-
-	for _, fx in ipairs(lighting:GetDescendants()) do
-		if fx:IsA("BlurEffect") or fx:IsA("SunRaysEffect") or fx:IsA("BloomEffect") or fx:IsA("ColorCorrectionEffect") then
-			fx.Enabled = false
 		end
 	end
 end
 
 function disableSmoothMode()
 	local lighting = game:GetService("Lighting")
-	lighting.GlobalShadows = true
 	lighting.Brightness = 2
 	lighting.ClockTime = 14
-	lighting.FogEnd = 1000
-	lighting.ExposureCompensation = 0.3
+	lighting.ExposureCompensation = 0
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 1e9
 
-	for _, fx in ipairs(lighting:GetDescendants()) do
-		if fx:IsA("BlurEffect") or fx:IsA("SunRaysEffect") or fx:IsA("BloomEffect") or fx:IsA("ColorCorrectionEffect") then
-			fx.Enabled = true
+	for _, obj in ipairs(game:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+			obj.Color = Color3.fromRGB(200, 200, 200)
 		end
 	end
 end
-						
