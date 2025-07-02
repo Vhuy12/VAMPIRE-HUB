@@ -2382,3 +2382,42 @@ fpsSmoothSection:AddToggle({
 	end
 })
 
+function enableSmoothMode()
+	pcall(function()
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	end)
+
+	local lighting = game:GetService("Lighting")
+	lighting.Brightness = 1
+	lighting.ClockTime = 13.5
+	lighting.ExposureCompensation = 0.1
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 1e9
+
+	for _, obj in ipairs(game:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+			obj.Color = Color3.fromRGB(60, 60, 60)
+		elseif obj:IsA("Texture") or obj:IsA("Decal") then
+			obj:Destroy()
+		end
+	end
+end
+
+function disableSmoothMode()
+	local lighting = game:GetService("Lighting")
+	lighting.Brightness = 1.5
+	lighting.ClockTime = 14
+	lighting.ExposureCompensation = 0
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 1e9
+
+	for _, obj in ipairs(game:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+			obj.Color = Color3.fromRGB(90, 90, 90)
+		end
+	end
+end
