@@ -2158,7 +2158,7 @@ HitSounds:AddSlider({
 
 HitSounds:AddDropdown({
     Name = "Hit Sound",
-    Options = hitSoundOptions,
+    Value = hitSoundOptions,
     Callback = function(selectedOption)
         if hitSoundIds[selectedOption] then
             hit_Sound.SoundId = hitSoundIds[selectedOption]
