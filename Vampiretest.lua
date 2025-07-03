@@ -2161,8 +2161,11 @@ HitSounds:AddDropdown({
     Values = hitSoundOptions,
     Default = "Medal",
     Callback = function(selectedOption)
-        if hitSoundIds[selectedOption] then
-            hit_Sound.SoundId = hitSoundIds[selectedOption]
+        local id = hitSoundIds[selectedOption]
+        if id then
+            hit_Sound.SoundId = id
+            task.wait(0.1)
+            hit_Sound:Play()
         end
     end
 })
