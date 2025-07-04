@@ -2538,18 +2538,27 @@ local hiddenSounds = {}
 noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
+		local Players = game:GetService("Players")
+		local LocalPlayer = Players.LocalPlayer
+
+		-- Xác định quả bóng bằng tên hoặc class
+		local function isBall(obj)
+			local n = obj.Name:lower()
+			if n:find("ball") then return true end
+			local parent = obj:FindFirstAncestorWhichIsA("Model")
+			return parent and parent.Name:lower():find("ball")
+		end
+
+		local function isSlashEffect(obj)
+			if not obj:IsDescendantOf(workspace) then return false end
+			if isBall(obj) then return false end
+
+			local n = obj.Name:lower()
+			return n:find("slash") or n:find("trail") or n:find("effect") or n:find("vfx") or n:find("swing") or n:find("glow") or n:find("sword")
+		end
+
 		if state then
-			local function isSlashEffect(obj)
-				if not obj:IsDescendantOf(workspace) then return false end
-				local n = obj.Name:lower()
-				local isEffect = n:find("slash") or n:find("trail") or n:find("effect") or n:find("swing") or n:find("sword")
-
-				-- ❌ Loại trừ quả bóng
-				local isBall = n:find("ball") or (obj.Parent and obj.Parent.Name:lower():find("ball"))
-
-				return isEffect and not isBall
-			end
-
+			-- 1. Ẩn tất cả hiệu ứng chém & âm thanh
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isSlashEffect(obj) then
 					if obj.Parent ~= nil then
@@ -2562,6 +2571,7 @@ noRenderSection:AddToggle({
 				end
 			end
 
+			-- 2. Theo dõi hiệu ứng chém mới tạo
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isSlashEffect(obj) then
 					task.delay(0.01, function()
@@ -2577,6 +2587,7 @@ noRenderSection:AddToggle({
 			end)
 
 		else
+			-- 3. Khôi phục tất cả
 			if effectConnection then effectConnection:Disconnect() end
 
 			for obj, parent in pairs(hiddenObjects) do
