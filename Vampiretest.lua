@@ -2538,40 +2538,38 @@ local hiddenSounds = {}
 noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
-		local Players = game:GetService("Players")
-		local LocalPlayer = Players.LocalPlayer
-
-		-- Xác định quả bóng bằng tên hoặc class
-		local function isBall(obj)
-			local n = obj.Name:lower()
-			if n:find("ball") then return true end
-			local parent = obj:FindFirstAncestorWhichIsA("Model")
-			return parent and parent.Name:lower():find("ball")
+		local function isPartOfBall(obj)
+			local name = obj.Name:lower()
+			if name:find("ball") then return true end
+			if obj.Parent and obj.Parent.Name:lower():find("ball") then return true end
+			if obj:IsDescendantOf(workspace:FindFirstChild("Ball") or Instance.new("Folder")) then return true end
+			return false
 		end
 
 		local function isSlashEffect(obj)
 			if not obj:IsDescendantOf(workspace) then return false end
-			if isBall(obj) then return false end
-
+			if isPartOfBall(obj) then return false end
 			local n = obj.Name:lower()
-			return n:find("slash") or n:find("trail") or n:find("effect") or n:find("vfx") or n:find("swing") or n:find("glow") or n:find("sword")
+			return n:find("slash") or n:find("trail") or n:find("glow") or n:find("effect") or n:find("vfx") or n:find("swing") or n:find("sword")
 		end
 
 		if state then
-			-- 1. Ẩn tất cả hiệu ứng chém & âm thanh
+			-- Ẩn toàn bộ hiệu ứng chém & âm thanh swing
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isSlashEffect(obj) then
-					if obj.Parent ~= nil then
+					if not hiddenObjects[obj] and obj.Parent then
 						hiddenObjects[obj] = obj.Parent
 						obj.Parent = nil
 					end
 				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-					hiddenSounds[obj] = obj.Volume
-					obj.Volume = 0
+					if not hiddenSounds[obj] then
+						hiddenSounds[obj] = obj.Volume
+						obj.Volume = 0
+					end
 				end
 			end
 
-			-- 2. Theo dõi hiệu ứng chém mới tạo
+			-- Theo dõi object mới được tạo ra
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isSlashEffect(obj) then
 					task.delay(0.01, function()
@@ -2587,21 +2585,21 @@ noRenderSection:AddToggle({
 			end)
 
 		else
-			-- 3. Khôi phục tất cả
+			-- Khôi phục hiệu ứng
 			if effectConnection then effectConnection:Disconnect() end
 
-			for obj, parent in pairs(hiddenObjects) do
-				if obj and parent then
+			for obj, originalParent in pairs(hiddenObjects) do
+				if obj and originalParent then
 					pcall(function()
-						obj.Parent = parent
+						obj.Parent = originalParent
 					end)
 				end
 			end
 
-			for obj, volume in pairs(hiddenSounds) do
+			for obj, originalVolume in pairs(hiddenSounds) do
 				if obj then
 					pcall(function()
-						obj.Volume = volume
+						obj.Volume = originalVolume
 					end)
 				end
 			end
