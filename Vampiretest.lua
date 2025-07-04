@@ -2527,108 +2527,66 @@ function disableSmoothMode()
 end
 
 local noRenderSection = misc:AddSection({
-	Name = "no render",
-	Position = "left"
+    Name = "no render",
+    Position = "left"
 })
 
-local effectConnection
-local muteLoop
-local mutedSounds = {}
+local conn
 local hiddenEffects = {}
-local renderOn = false
+local mutedSounds = {}
 
 noRenderSection:AddToggle({
-	Name = "no render",
-	Callback = function(state)
-		local function isFromBall(obj)
-			local parent = obj:FindFirstAncestorWhichIsA("Model")
-			return (parent and parent.Name:lower():find("ball"))
-		end
+    Name = "no render",
+    Callback = function(state)
+        -- Xác định VFX chém
+        local function isSlashVFX(obj)
+            if not obj:IsDescendantOf(workspace) then return false end
+            -- Loại trừ tất cả object nằm trong mô hình Ball
+            local model = obj:FindFirstAncestorWhichIsA("Model")
+            if model and model.Name:lower():find("ball") then return false end
+            return obj:IsA("ParticleEmitter")
+                or obj:IsA("Trail")
+                or obj:IsA("Beam")
+        end
 
-		local function isVisualEffect(obj)
-			return (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam"))
-				and not isFromBall(obj)
-		end
+        -- Xử lý ẩn VFX và mute Sound
+        local function handle(obj)
+            if isSlashVFX(obj) and obj.Enabled ~= false then
+                hiddenEffects[obj] = obj.Enabled
+                obj.Enabled = false
+            elseif obj:IsA("Sound") and obj.Volume > 0 then
+                mutedSounds[obj] = obj.Volume
+                obj:Stop()
+                obj.Volume = 0
+            end
+        end
 
-		local function hideEffect(obj)
-			if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
-				if obj.Enabled ~= false then
-					hiddenEffects[obj] = true
-					obj.Enabled = false
-				end
-			end
-		end
-
-		local function restoreEffect(obj)
-			if hiddenEffects[obj] then
-				pcall(function()
-					obj.Enabled = true
-				end)
-			end
-		end
-
-		if state then
-			renderOn = true
-
-			for _, obj in ipairs(game:GetDescendants()) do
-				if isVisualEffect(obj) then
-					hideEffect(obj)
-				elseif obj:IsA("Sound") and obj.Volume > 0 then
-					if not mutedSounds[obj] then
-						mutedSounds[obj] = obj.Volume
-					end
-					obj.Volume = 0
-					obj:Stop()
-				end
-			end
-
-			effectConnection = game.DescendantAdded:Connect(function(obj)
-				if isVisualEffect(obj) then
-					task.defer(function()
-						hideEffect(obj)
-					end)
-				elseif obj:IsA("Sound") and obj.Volume > 0 then
-					if not mutedSounds[obj] then
-						mutedSounds[obj] = obj.Volume
-					end
-					obj.Volume = 0
-					obj:Stop()
-				end
-			end)
-
-			-- 🧠 Không dùng Heartbeat, dùng vòng lặp nhẹ
-			muteLoop = task.spawn(function()
-				while renderOn do
-					for _, obj in ipairs(game:GetDescendants()) do
-						if obj:IsA("Sound") and obj.IsPlaying and obj.Volume > 0 then
-							if not mutedSounds[obj] then
-								mutedSounds[obj] = obj.Volume
-							end
-							obj.Volume = 0
-							obj:Stop()
-						end
-					end
-					task.wait(0.5)
-				end
-			end)
-
-		else
-			renderOn = false
-			if effectConnection then effectConnection:Disconnect() end
-
-			for obj, vol in pairs(mutedSounds) do
-				if obj and obj:IsA("Sound") then
-					pcall(function()
-						obj.Volume = vol
-					end)
-				end
-			end
-			mutedSounds = {}
-
-			for obj, _ in pairs(hiddenEffects) do
-				restoreEffect(obj)
-			end
-			hiddenEffects = {}
-		end
-	end
+        if state then
+            -- 1. Ẩn tạm VFX + mute Sound có sẵn
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                handle(obj)
+            end
+            -- 2. Theo dõi VFX/Sound mới
+            conn = workspace.DescendantAdded:Connect(handle)
+        else
+            -- 3. Ngắt theo dõi
+            if conn then conn:Disconnect() conn = nil end
+            -- 4. Khôi phục Sound
+            for sound, vol in pairs(mutedSounds) do
+                if sound and sound:IsA("Sound") then
+                    pcall(function() sound.Volume = vol end)
+                end
+            end
+            mutedSounds = {}
+            -- 5. Khôi phục VFX
+            for eff, wasEnabled in pairs(hiddenEffects) do
+                if eff and eff:IsA("ParticleEmitter") 
+                       or eff:IsA("Trail") 
+                       or eff:IsA("Beam") then
+                    pcall(function() eff.Enabled = wasEnabled end)
+                end
+            end
+            hiddenEffects = {}
+        end
+    end
 })
