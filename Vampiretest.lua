@@ -2527,7 +2527,7 @@ function disableSmoothMode()
 end
 
 local noRenderSection = misc:AddSection({
-	Name = "no render",
+	Name = "No Render",
 	Position = "left"
 })
 
@@ -2536,79 +2536,58 @@ local mutedSounds = {}
 local invisibleParts = {}
 
 noRenderSection:AddToggle({
-	Name = "no render",
+	Name = "No Render",
 	Callback = function(state)
-		local function isFromBall(obj)
-			local model = obj:FindFirstAncestorWhichIsA("Model")
-			return model and model.Name:lower():find("ball")
-		end
+		local function isVisualEffect(obj)
+	return obj:IsA("Trail")
+		or obj:IsA("ParticleEmitter")
+		or obj:IsA("Beam")
+		or obj:IsA("Attachment")
+		or obj:IsA("Decal")
+		or obj:IsA("Texture")
+end
 
-		local function isSlashPart(obj)
-			return obj:IsA("BasePart") and not isFromBall(obj) and (
-				obj.Name:lower():find("slash") or
-				obj.Name:lower():find("sword") or
-				obj.Name:lower():find("trail") or
-				obj.Name:lower():find("effect")
-			)
-		end
+local function removeEffect(obj)
+	if not obj:IsDescendantOf(workspace) then return end
+	if isVisualEffect(obj) then
+		pcall(function()
+			obj:Destroy()
+		end)
+	end
+end
 
-		local function muteSwing(obj)
-			if obj:IsA("Sound") and obj.Name:lower():find("swing") then
-				if not mutedSounds[obj] then
-					mutedSounds[obj] = obj.Volume
-					obj.Volume = 0
-					obj:Stop()
-				end
-			end
-		end
+for _, obj in ipairs(workspace:GetDescendants()) do
+	removeEffect(obj)
+end
 
-		local function hideSlash(obj)
-			if isSlashPart(obj) and obj.Transparency < 1 then
-				invisibleParts[obj] = obj.Transparency
-				obj.Transparency = 1
-				if obj:FindFirstChildOfClass("Decal") then
-					for _, d in ipairs(obj:GetChildren()) do
-						if d:IsA("Decal") or d:IsA("Texture") then
-							invisibleParts[d] = d.Transparency
-							d.Transparency = 1
-						end
-					end
-				end
-			end
-		end
+workspace.DescendantAdded:Connect(function(obj)
+	task.defer(function()
+		removeEffect(obj)
+	end)
+end)
 
-		if state then
-			for _, obj in ipairs(workspace:GetDescendants()) do
-				hideSlash(obj)
-				muteSwing(obj)
-			end
+pcall(function()
+	local SoundService = game:GetService("SoundService")
 
-			conn = workspace.DescendantAdded:Connect(function(obj)
-				task.defer(function()
-					hideSlash(obj)
-					muteSwing(obj)
-				end)
+	for _, sound in ipairs(game:GetDescendants()) do
+		if sound:IsA("Sound") then
+			pcall(function()
+				sound.Volume = 0
+				sound:Stop()
 			end)
-		else
-			if conn then conn:Disconnect() conn = nil end
-
-			for obj, value in pairs(invisibleParts) do
-				if obj and obj:IsA("Instance") then
-					pcall(function()
-						obj.Transparency = value
-					end)
-				end
-			end
-			invisibleParts = {}
-
-			for obj, vol in pairs(mutedSounds) do
-				if obj and obj:IsA("Sound") then
-					pcall(function()
-						obj.Volume = vol
-					end)
-				end
-			end
-			mutedSounds = {}
 		end
 	end
-})
+
+	game.DescendantAdded:Connect(function(obj)
+		if obj:IsA("Sound") then
+			pcall(function()
+				obj.Volume = 0
+				obj:Stop()
+			end)
+		end
+	end)
+
+	SoundService:ClearAllChildren()
+	SoundService.AmbientReverb = Enum.ReverbType.NoReverb
+end)
+			
