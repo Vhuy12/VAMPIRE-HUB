@@ -2591,3 +2591,224 @@ pcall(function()
 	SoundService.AmbientReverb = Enum.ReverbType.NoReverb
 end)
 			
+local noRenderSection = misc:AddSection({
+	Name = "No Render",
+	Position = "left"
+})
+
+local conn1, conn2
+local mutedSounds = {}
+
+local function isVisualEffect(obj)
+	return obj:IsA("Trail")
+		or obj:IsA("ParticleEmitter")
+		or obj:IsA("Beam")
+		or obj:IsA("Attachment")
+		or obj:IsA("Decal")
+		or obj:IsA("Texture")
+end
+
+local function removeEffect(obj)
+	if not obj:IsDescendantOf(workspace) then return end
+	if isVisualEffect(obj) then
+		pcall(function()
+			obj:Destroy()
+		end)
+	end
+end
+
+local function muteSound(obj)
+	if obj:IsA("Sound") then
+		pcall(function()
+			mutedSounds[obj] = obj.Volume
+			obj.Volume = 0
+			obj:Stop()
+		end)
+	end
+end
+
+noRenderSection:AddToggle({
+	Name = "No Render",
+	Callback = function(state)
+		if state then
+			-- Xóa hiệu ứng hiện tại
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				removeEffect(obj)
+			end
+
+			-- Tắt âm thanh hiện tại
+			for _, obj in ipairs(game:GetDescendants()) do
+				muteSound(obj)
+			end
+
+			-- Theo dõi object mới
+			conn1 = workspace.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					removeEffect(obj)
+				end)
+			end)
+
+			conn2 = game.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					muteSound(obj)
+				end)
+			end)
+
+			-- Tắt hiệu ứng môi trường
+			local SoundService = game:GetService("SoundService")
+			pcall(function()
+				SoundService:ClearAllChildren()
+				SoundService.AmbientReverb = Enum.ReverbType.NoReverb
+			end)
+		else
+			-- Ngắt kết nối
+			if conn1 then conn1:Disconnect() conn1 = nil end
+			if conn2 then conn2:Disconnect() conn2 = nil end
+local noRenderSection = misc:AddSection({
+	Name = "No Render",
+	Position = "left"
+})
+
+local conn1, conn2
+local mutedSounds = {}
+
+local function isVisualEffect(obj)
+	return obj:IsA("Trail")
+		or obj:IsA("ParticleEmitter")
+		or obj:IsA("Beam")
+		or obj:IsA("Attachment")
+		or obj:IsA("Decal")
+		or obj:IsA("Texture")
+end
+
+local function removeEffect(obj)
+	if not obj:IsDescendantOf(workspace) then return end
+	if isVisualEffect(obj) then
+		pcall(function()
+			obj:Destroy()
+		end)
+	end
+end
+
+local function muteSound(obj)
+	if obj:IsA("Sound") then
+		pcall(function()
+			mutedSounds[obj] = obj.Volume
+			obj.Volume = 0
+			obj:Stop()
+		end)
+	end
+end
+
+noRenderSection:AddToggle({
+	Name = "No Render",
+	Default = false,
+	Callback = function(state)
+		if state then
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				removeEffect(obj)
+			end
+
+			for _, obj in ipairs(game:GetDescendants()) do
+				muteSound(obj)
+			end
+
+			conn1 = workspace.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					removeEffect(obj)
+				end)
+			end)
+
+			conn2 = game.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					muteSound(obj)
+				end)
+			end)
+
+			local SoundService = game:GetService("SoundService")
+			pcall(function()
+				SoundService:ClearAllChildren()
+				SoundService.AmbientReverb = Enum.ReverbType.NoReverb
+			end)
+		else
+			if conn1 then conn1:Disconnect() conn1 = nil end
+			if conn2 then conn2:Disconnect() conn2 = nil end
+
+			for sound, vol in pairs(mutedSounds) do
+				if sound and sound:IsDescendantOf(game) then
+					pcall(function()
+						sound.Volume = vol
+					end)
+				end
+			end
+			mutedSounds = {}
+		end
+	end
+})
+
+local BallStatsSection = misc:AddSection({
+	Name = "Ball Stats",
+	Position = "right"
+})
+BallStatsSection:AddToggle({
+	Name = "Ball Stats",
+	Callback = function(state)
+		if state then
+		   local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BallSpeedGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0, 300, 0, 80)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1, 1, 1)
+label.Font = Enum.Font.GothamBold
+label.TextSize = 32
+label.Text = "velocity: ...\npeak: ..."
+label.TextXAlignment = Enum.TextXAlignment.Left
+label.TextYAlignment = Enum.TextYAlignment.Top
+label.TextWrapped = true
+label.Parent = gui
+
+local currentBall = nil
+local peakSpeed = 0
+
+local function findFastestBall()
+	local ballsFolder = workspace:FindFirstChild("Balls")
+	if not ballsFolder then return nil end
+
+	local bestBall = nil
+	local maxSpeed = 0
+
+	for _, obj in ipairs(ballsFolder:GetChildren()) do
+		if obj:IsA("BasePart") then
+			local speed = obj.Velocity.Magnitude
+			if speed > maxSpeed then
+				maxSpeed = speed
+				bestBall = obj
+			end
+		end
+	end
+
+	return bestBall
+end
+
+RunService.RenderStepped:Connect(function()
+	local ball = findFastestBall()
+	if ball and ball:IsDescendantOf(workspace) then
+		local speed = math.floor(ball.Velocity.Magnitude + 0.5)
+		currentBall = ball
+		if speed > peakSpeed then
+			peakSpeed = speed
+		end
+		label.Text = "velocity: " .. speed .. "\npeak: " .. peakSpeed
+	else
+		label.Text = "velocity: not found\npeak: " .. peakSpeed
+	end
+end)
