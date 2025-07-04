@@ -2538,23 +2538,21 @@ noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
 		local function isFromBall(obj)
-			local name = obj.Name:lower()
-			if name:find("ball") then return true end
-			if obj.Parent and obj.Parent.Name:lower():find("ball") then return true end
-			return false
+			local parent = obj:FindFirstAncestorWhichIsA("Model")
+			return (parent and parent.Name:lower():find("ball"))
 		end
 
-		local function isSlashEffect(obj)
-			if not obj:IsDescendantOf(workspace) then return false end
-			if isFromBall(obj) then return false end
-			local name = obj.Name:lower()
-			return name:find("slash") or name:find("trail") or name:find("glow") or name:find("sword") or name:find("vfx") or name:find("effect")
+		local function isVisualEffect(obj)
+			return (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam")
+				or obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("Fire")
+				or obj:IsA("Smoke") or obj:IsA("Sparkles"))
+				and not isFromBall(obj)
 		end
 
 		if state then
-			-- Xoá hiệu ứng hiện tại
+			-- Xoá hiệu ứng VFX hiện tại
 			for _, obj in ipairs(game:GetDescendants()) do
-				if isSlashEffect(obj) then
+				if isVisualEffect(obj) then
 					pcall(function()
 						obj:Destroy()
 					end)
@@ -2567,7 +2565,7 @@ noRenderSection:AddToggle({
 
 			-- Theo dõi tạo mới
 			effectConnection = game.DescendantAdded:Connect(function(obj)
-				if isSlashEffect(obj) then
+				if isVisualEffect(obj) then
 					task.defer(function()
 						if obj and obj:IsDescendantOf(workspace) then
 							pcall(function()
@@ -2583,14 +2581,13 @@ noRenderSection:AddToggle({
 			end)
 
 		else
-			-- Tắt theo dõi
+			-- Ngắt kết nối và khôi phục âm thanh
 			if effectConnection then effectConnection:Disconnect() end
 
-			-- Khôi phục âm thanh chém
-			for obj, volume in pairs(swingSounds) do
+			for obj, vol in pairs(swingSounds) do
 				if obj and obj:IsA("Sound") then
 					pcall(function()
-						obj.Volume = volume
+						obj.Volume = vol
 					end)
 				end
 			end
