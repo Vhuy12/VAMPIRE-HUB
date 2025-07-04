@@ -2531,69 +2531,70 @@ local noRenderSection = misc:AddSection({
 	Position = "left"
 })
 
-local muteConnection
 local effectConnection
-local HiddenEffects = {}
-local HiddenSounds = {}
+local hiddenObjects = {}
+local hiddenSounds = {}
 
 noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
 		if state then
-			local function isSwordEffect(obj)
+			local function isSlashEffect(obj)
 				if not obj.Name then return false end
 				local name = obj.Name:lower()
-				return name:find("slash") or name:find("swing") or name:find("effect") or name:find("trail") or name:find("vfx") or name:find("sword")
+				return name:find("slash") or name:find("trail") or name:find("effect") or name:find("swing") or name:find("sword")
 			end
 
+			-- 1. Ẩn toàn bộ hiệu ứng chém hiện tại
 			for _, obj in ipairs(game:GetDescendants()) do
-				if isSwordEffect(obj) then
-					if (obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles")) and obj.Enabled then
-						table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
-						obj.Enabled = false
+				if isSlashEffect(obj) then
+					if obj.Parent ~= nil then
+						hiddenObjects[obj] = obj.Parent
+						obj.Parent = nil
 					end
 				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-					if obj.Volume > 0 then
-						table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
-						obj.Volume = 0
-					end
+					hiddenSounds[obj] = obj.Volume
+					obj.Volume = 0
 				end
 			end
 
+			-- 2. Theo dõi hiệu ứng mới tạo
 			effectConnection = game.DescendantAdded:Connect(function(obj)
-				if isSwordEffect(obj) then
-					task.wait(0.01)
-					if obj and (obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles")) then
-						table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
-						obj.Enabled = false
-					end
+				if isSlashEffect(obj) then
+					task.delay(0.01, function()
+						if obj and obj.Parent then
+							hiddenObjects[obj] = obj.Parent
+							obj.Parent = nil
+						end
+					end)
 				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-					table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
+					hiddenSounds[obj] = obj.Volume
 					obj.Volume = 0
 				end
 			end)
+
 		else
 			if effectConnection then effectConnection:Disconnect() end
-			if muteConnection then muteConnection:Disconnect() end
 
-			for _, data in ipairs(HiddenEffects) do
-				if data.obj and data.obj:IsA("Instance") then
+			-- 3. Khôi phục effect đã ẩn
+			for obj, parent in pairs(hiddenObjects) do
+				if obj and parent then
 					pcall(function()
-						data.obj.Enabled = data.enabled
+						obj.Parent = parent
 					end)
 				end
 			end
 
-			for _, data in ipairs(HiddenSounds) do
-				if data.obj and data.obj:IsA("Sound") then
+			for obj, volume in pairs(hiddenSounds) do
+				if obj then
 					pcall(function()
-						data.obj.Volume = data.volume
+						obj.Volume = volume
 					end)
 				end
 			end
 
-			HiddenEffects = {}
-			HiddenSounds = {}
+			hiddenObjects = {}
+			hiddenSounds = {}
 		end
 	end
 })
