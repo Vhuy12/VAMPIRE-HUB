@@ -2526,3 +2526,100 @@ function disableSmoothMode()
 	end
 end
 
+local noRenderSection = misc:AddSection({
+	Name = "No Render",
+	Position = "left"
+})
+
+local muteConnection
+local effectConnection
+local HiddenEffects = {}
+local SoundService = game:GetService("SoundService")
+
+noRenderSection:AddToggle({
+	Name = "No Render",
+	Callback = function(state)
+		if state then
+			pcall(function()
+				local function isSlashEffect(obj)
+					return obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or
+						   obj:IsA("ShimmerEffect") or obj:IsA("Smoke") or obj:IsA("Sparkles") or
+						   (obj.Name and (
+								obj.Name:lower():find("slash") or
+								obj.Name:lower():find("trail") or
+								obj.Name:lower():find("glow") or
+								obj.Name:lower():find("vfx") or
+								obj.Name:lower():find("effect")
+							))
+				end
+
+				for _, obj in ipairs(game:GetDescendants()) do
+					if isSlashEffect(obj) then
+						pcall(function()
+							if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
+								obj.Enabled = false
+								table.insert(HiddenEffects, {Instance = obj, Restore = "Enabled"})
+							elseif obj.Parent then
+								obj.Parent = nil
+								table.insert(HiddenEffects, {Instance = obj, Restore = "Parent"})
+							end
+						end)
+					elseif obj:IsA("Sound") then
+						pcall(function()
+							obj.Volume = 0
+							obj:Stop()
+						end)
+					end
+				end
+
+				muteConnection = game.DescendantAdded:Connect(function(obj)
+					if obj:IsA("Sound") then
+						pcall(function()
+							obj.Volume = 0
+							obj:Stop()
+						end)
+					end
+				end)
+
+				effectConnection = game.DescendantAdded:Connect(function(obj)
+					if isSlashEffect(obj) then
+						pcall(function()
+							if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
+								obj.Enabled = false
+								table.insert(HiddenEffects, {Instance = obj, Restore = "Enabled"})
+							elseif obj.Parent then
+								obj.Parent = nil
+								table.insert(HiddenEffects, {Instance = obj, Restore = "Parent"})
+							end
+						end)
+					end
+				end)
+			end)
+		else
+			for _, obj in ipairs(game:GetDescendants()) do
+				if obj:IsA("Sound") then
+					pcall(function()
+						obj.Volume = 1
+					end)
+				end
+			end
+
+			if muteConnection then muteConnection:Disconnect() muteConnection = nil end
+			if effectConnection then effectConnection:Disconnect() effectConnection = nil end
+
+			for _, data in ipairs(HiddenEffects) do
+				local obj = data.Instance
+				if obj and obj.Parent == nil and data.Restore == "Parent" then
+					pcall(function()
+						obj.Parent = workspace
+					end)
+				elseif data.Restore == "Enabled" then
+					pcall(function()
+						obj.Enabled = true
+					end)
+				end
+			end
+			HiddenEffects = {}
+		end
+	end
+})
