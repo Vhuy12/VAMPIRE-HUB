@@ -2532,9 +2532,10 @@ local noRenderSection = misc:AddSection({
 })
 
 local effectConnection
-local muteConnection
+local muteLoop
 local mutedSounds = {}
 local hiddenEffects = {}
+local renderOn = false
 
 noRenderSection:AddToggle({
 	Name = "no render",
@@ -2567,6 +2568,8 @@ noRenderSection:AddToggle({
 		end
 
 		if state then
+			renderOn = true
+
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isVisualEffect(obj) then
 					hideEffect(obj)
@@ -2593,21 +2596,25 @@ noRenderSection:AddToggle({
 				end
 			end)
 
-			muteConnection = game:GetService("RunService").Heartbeat:Connect(function()
-				for _, obj in ipairs(game:GetDescendants()) do
-					if obj:IsA("Sound") and obj.IsPlaying and obj.Volume > 0 then
-						if not mutedSounds[obj] then
-							mutedSounds[obj] = obj.Volume
+			-- 🧠 Không dùng Heartbeat, dùng vòng lặp nhẹ
+			muteLoop = task.spawn(function()
+				while renderOn do
+					for _, obj in ipairs(game:GetDescendants()) do
+						if obj:IsA("Sound") and obj.IsPlaying and obj.Volume > 0 then
+							if not mutedSounds[obj] then
+								mutedSounds[obj] = obj.Volume
+							end
+							obj.Volume = 0
+							obj:Stop()
 						end
-						obj.Volume = 0
-						obj:Stop()
 					end
+					task.wait(0.5)
 				end
 			end)
 
 		else
+			renderOn = false
 			if effectConnection then effectConnection:Disconnect() end
-			if muteConnection then muteConnection:Disconnect() end
 
 			for obj, vol in pairs(mutedSounds) do
 				if obj and obj:IsA("Sound") then
