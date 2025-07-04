@@ -2534,6 +2534,21 @@ local noRenderSection = misc:AddSection({
 local effectConnection
 local swingSounds = {}
 
+-- 🟢 Danh sách từ khoá âm thanh chém phổ biến
+local swordKeywords = {
+	"swing", "slash", "hit", "cut", "attack", "blade", "strike", "sword"
+}
+
+local function isSwordSound(name)
+	name = name:lower()
+	for _, keyword in pairs(swordKeywords) do
+		if name:find(keyword) then
+			return true
+		end
+	end
+	return false
+end
+
 noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
@@ -2550,13 +2565,11 @@ noRenderSection:AddToggle({
 		end
 
 		if state then
-			-- Xoá hiệu ứng VFX hiện tại
+			-- Xoá hiệu ứng hiện tại + tiếng chém
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isVisualEffect(obj) then
-					pcall(function()
-						obj:Destroy()
-					end)
-				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
+					pcall(function() obj:Destroy() end)
+				elseif obj:IsA("Sound") and isSwordSound(obj.Name) then
 					swingSounds[obj] = obj.Volume
 					obj.Volume = 0
 					obj:Stop()
@@ -2567,13 +2580,9 @@ noRenderSection:AddToggle({
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isVisualEffect(obj) then
 					task.defer(function()
-						if obj and obj:IsDescendantOf(workspace) then
-							pcall(function()
-								obj:Destroy()
-							end)
-						end
+						pcall(function() obj:Destroy() end)
 					end)
-				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
+				elseif obj:IsA("Sound") and isSwordSound(obj.Name) then
 					swingSounds[obj] = obj.Volume
 					obj.Volume = 0
 					obj:Stop()
@@ -2581,7 +2590,7 @@ noRenderSection:AddToggle({
 			end)
 
 		else
-			-- Ngắt kết nối và khôi phục âm thanh
+			-- Khôi phục âm thanh
 			if effectConnection then effectConnection:Disconnect() end
 
 			for obj, vol in pairs(swingSounds) do
@@ -2594,4 +2603,4 @@ noRenderSection:AddToggle({
 			swingSounds = {}
 		end
 	end
-})
+})					
