@@ -2580,8 +2580,8 @@ noRenderSection:AddToggle({
 				if isSlashEffect(obj) and not isBall(obj) then
 					pcall(function()
 						if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
-							table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
 							obj.Enabled = false
+							table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
 						end
 					end)
 				end
@@ -2602,7 +2602,7 @@ noRenderSection:AddToggle({
 			for _, data in ipairs(HiddenSounds) do
 				if data and data.obj and data.obj:IsA("Sound") then
 					pcall(function()
-						data.obj.Volume = data.volume or 1
+						data.obj.Volume = data.volume
 					end)
 				end
 			end
@@ -2619,4 +2619,4 @@ noRenderSection:AddToggle({
 			HiddenEffects = {}
 		end
 	end
-})	
+})
