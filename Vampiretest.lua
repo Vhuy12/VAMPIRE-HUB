@@ -2540,79 +2540,77 @@ noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
 		if state then
-			pcall(function()
-				local function isSlashEffect(obj)
-					return obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or
-						   obj:IsA("ShimmerEffect") or obj:IsA("Smoke") or obj:IsA("Sparkles") or
-						   (obj.Name and (
-								obj.Name:lower():find("slash") or
-								obj.Name:lower():find("trail") or
-								obj.Name:lower():find("glow") or
-								obj.Name:lower():find("vfx") or
-								obj.Name:lower():find("effect")
-							))
-				end
+			local function isSlashEffect(obj)
+				return obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") or
+					obj:IsA("ShimmerEffect") or obj:IsA("Smoke") or
+					(obj.Name and (
+						obj.Name:lower():find("slash") or
+						obj.Name:lower():find("trail") or
+						obj.Name:lower():find("glow") or
+						obj.Name:lower():find("vfx") or
+						obj.Name:lower():find("effect")
+					))
+			end
 
-				local function isBall(obj)
-					return obj.Name:lower():find("ball") or (obj:IsA("BasePart") and obj:FindFirstAncestorWhichIsA("Model") and obj:FindFirstAncestorWhichIsA("Model").Name:lower():find("ball"))
-				end
+			local function isBall(obj)
+				return obj.Name:lower():find("ball") or (obj:IsA("BasePart") and obj:FindFirstAncestorWhichIsA("Model") and obj:FindFirstAncestorWhichIsA("Model").Name:lower():find("ball"))
+			end
 
-				for _, obj in ipairs(game:GetDescendants()) do
-					if isSlashEffect(obj) and not isBall(obj) then
-						pcall(function()
-							if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
-								if obj.Enabled ~= false then
-									table.insert(HiddenEffects, obj)
-									obj.Enabled = false
-								end
-							end
-						end)
-					elseif obj:IsA("Sound") then
-						pcall(function()
-							if obj.Volume > 0 then
-								table.insert(HiddenSounds, obj)
-								obj.Volume = 0
-							end
-						end)
-					end
-				end
-
-				effectConnection = game.DescendantAdded:Connect(function(obj)
-					if isSlashEffect(obj) and not isBall(obj) then
-						pcall(function()
-							if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
+			for _, obj in ipairs(game:GetDescendants()) do
+				if isSlashEffect(obj) and not isBall(obj) then
+					pcall(function()
+						if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
+							if obj.Enabled ~= false then
+								table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
 								obj.Enabled = false
-								table.insert(HiddenEffects, obj)
 							end
-						end)
-					end
-				end)
-
-				muteConnection = game.DescendantAdded:Connect(function(obj)
-					if obj:IsA("Sound") then
-						pcall(function()
+						end
+					end)
+				elseif obj:IsA("Sound") then
+					pcall(function()
+						if obj.Volume > 0 then
+							table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
 							obj.Volume = 0
-							table.insert(HiddenSounds, obj)
-						end)
-					end
-				end)
+						end
+					end)
+				end
+			end
+
+			effectConnection = game.DescendantAdded:Connect(function(obj)
+				if isSlashEffect(obj) and not isBall(obj) then
+					pcall(function()
+						if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
+							table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
+							obj.Enabled = false
+						end
+					end)
+				end
+			end)
+
+			muteConnection = game.DescendantAdded:Connect(function(obj)
+				if obj:IsA("Sound") then
+					pcall(function()
+						table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
+						obj.Volume = 0
+					end)
+				end
 			end)
 		else
 			if muteConnection then muteConnection:Disconnect() muteConnection = nil end
 			if effectConnection then effectConnection:Disconnect() effectConnection = nil end
 
-			for _, sound in ipairs(HiddenSounds) do
-				if sound and sound:IsA("Sound") then
+			for _, data in ipairs(HiddenSounds) do
+				if data and data.obj and data.obj:IsA("Sound") then
 					pcall(function()
-						sound.Volume = 1
+						data.obj.Volume = data.volume or 1
 					end)
 				end
 			end
 
-			for _, eff in ipairs(HiddenEffects) do
-				if eff and (eff:IsA("Trail") or eff:IsA("Beam") or eff:IsA("ParticleEmitter") or eff:IsA("Sparkles")) then
+			for _, data in ipairs(HiddenEffects) do
+				if data and data.obj and (data.obj:IsA("Trail") or data.obj:IsA("Beam") or data.obj:IsA("ParticleEmitter") or data.obj:IsA("Sparkles")) then
 					pcall(function()
-						eff.Enabled = true
+						data.obj.Enabled = data.enabled
 					end)
 				end
 			end
@@ -2621,5 +2619,4 @@ noRenderSection:AddToggle({
 			HiddenEffects = {}
 		end
 	end
-})
-
+})	
