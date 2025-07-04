@@ -2589,7 +2589,9 @@ noRenderSection:AddToggle({
 
 			local SoundService = game:GetService("SoundService")
 			pcall(function()
-				SoundService:ClearAllChildren()
+				for _, obj in ipairs(SoundService:GetChildren()) do
+					obj:Destroy()
+				end
 				SoundService.AmbientReverb = Enum.ReverbType.NoReverb
 			end)
 		else
@@ -2612,65 +2614,73 @@ local BallStatsSection = misc:AddSection({
 	Name = "Ball Stats",
 	Position = "right"
 })
-BallStatsSection:AddToggle({
-	Name = "Ball Stats",
-	Callback = function(state)
-		if state then
-		   local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "BallSpeedGui"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
-
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(0, 300, 0, 80)
-label.Position = UDim2.new(0, 10, 0, 10)
-label.BackgroundTransparency = 1
-label.TextColor3 = Color3.new(1, 1, 1)
-label.Font = Enum.Font.GothamBold
-label.TextSize = 32
-label.Text = "velocity: ...\npeak: ..."
-label.TextXAlignment = Enum.TextXAlignment.Left
-label.TextYAlignment = Enum.TextYAlignment.Top
-label.TextWrapped = true
-label.Parent = gui
-
-local currentBall = nil
+local statsGui, label, renderConn
 local peakSpeed = 0
 
-local function findFastestBall()
-	local ballsFolder = workspace:FindFirstChild("Balls")
-	if not ballsFolder then return nil end
+BallStatsSection:AddToggle({
+	Name = "Ball Stats",
+	Default = false,
+	Callback = function(state)
+		if state then
+			local Players = game:GetService("Players")
+			local RunService = game:GetService("RunService")
+			local player = Players.LocalPlayer
 
-	local bestBall = nil
-	local maxSpeed = 0
+			statsGui = Instance.new("ScreenGui")
+			statsGui.Name = "BallSpeedGui"
+			statsGui.ResetOnSpawn = false
+			statsGui.Parent = player:WaitForChild("PlayerGui")
 
-	for _, obj in ipairs(ballsFolder:GetChildren()) do
-		if obj:IsA("BasePart") then
-			local speed = obj.Velocity.Magnitude
-			if speed > maxSpeed then
-				maxSpeed = speed
-				bestBall = obj
+			label = Instance.new("TextLabel")
+			label.Size = UDim2.new(0, 300, 0, 80)
+			label.Position = UDim2.new(0, 10, 0, 10)
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Font = Enum.Font.GothamBold
+			label.TextSize = 32
+			label.Text = "velocity: ...\npeak: ..."
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextYAlignment = Enum.TextYAlignment.Top
+			label.TextWrapped = true
+			label.Parent = statsGui
+
+			local function findFastestBall()
+				local ballsFolder = workspace:FindFirstChild("Balls")
+				if not ballsFolder then return nil end
+
+				local bestBall = nil
+				local maxSpeed = 0
+
+				for _, obj in ipairs(ballsFolder:GetChildren()) do
+					if obj:IsA("BasePart") then
+						local speed = obj.Velocity.Magnitude
+						if speed > maxSpeed then
+							maxSpeed = speed
+							bestBall = obj
+						end
+					end
+				end
+
+				return bestBall
 			end
+
+			renderConn = RunService.RenderStepped:Connect(function()
+				local ball = findFastestBall()
+				if ball and ball:IsDescendantOf(workspace) then
+					local speed = math.floor(ball.Velocity.Magnitude + 0.5)
+					if speed > peakSpeed then
+						peakSpeed = speed
+					end
+					label.Text = "velocity: " .. speed .. "\npeak: " .. peakSpeed
+				else
+					label.Text = "velocity: not found\npeak: " .. peakSpeed
+				end
+			end)
+		else
+			if renderConn then renderConn:Disconnect() renderConn = nil end
+			if statsGui then statsGui:Destroy() statsGui = nil end
+			peakSpeed = 0
 		end
 	end
-
-	return bestBall
-end
-
-RunService.RenderStepped:Connect(function()
-	local ball = findFastestBall()
-	if ball and ball:IsDescendantOf(workspace) then
-		local speed = math.floor(ball.Velocity.Magnitude + 0.5)
-		currentBall = ball
-		if speed > peakSpeed then
-			peakSpeed = speed
-		end
-		label.Text = "velocity: " .. speed .. "\npeak: " .. peakSpeed
-	else
-		label.Text = "velocity: not found\npeak: " .. peakSpeed
-	end
-end)
+})
