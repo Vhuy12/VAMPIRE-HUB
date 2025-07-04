@@ -47,7 +47,7 @@ local VirtualInputService = game:GetService("VirtualInputManager")
 
 local GuiService = game:GetService('GuiService')
 
-local function updateNavigation(guiObject: GuiObject | nil)
+local function updateNavigation(guiObject)
     GuiService.SelectedObject = guiObject
 end
 
