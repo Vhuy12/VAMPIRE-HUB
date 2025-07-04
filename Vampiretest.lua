@@ -2527,72 +2527,75 @@ function disableSmoothMode()
 end
 
 local noRenderSection = misc:AddSection({
-    Name = "no render",
-    Position = "left"
+	Name = "no render",
+	Position = "left"
 })
 
-local origNew = Instance.new
-local hiddenOld = {}
+local effectConnection
+local hiddenEffects = {}
 local mutedSounds = {}
-local hookConn
 
 noRenderSection:AddToggle({
-    Name = "no render",
-    Callback = function(on)
-        if on then
-            Instance.new = function(class, parent, ...)
-                if class == "Trail" or class == "ParticleEmitter" or class == "Beam" then
-                    return origNew("Folder", parent)
-                end
-                return origNew(class, parent, ...)
-            end
+	Name = "no render",
+	Callback = function(state)
+		local function isFromBall(obj)
+			local model = obj:FindFirstAncestorWhichIsA("Model")
+			return model and model.Name:lower():find("ball")
+		end
 
-            for _, v in ipairs(workspace:GetDescendants()) do
-                if v:IsA("Trail") or v:IsA("ParticleEmitter") or v:IsA("Beam") then
-                    if v.Enabled then
-                        v.Enabled = false
-                        hiddenOld[v] = true
-                    end
-                elseif v:IsA("Sound") and v.Name:lower():find("swing") then
-                    if v.Volume > 0 then
-                        mutedSounds[v] = v.Volume
-                        v:Stop()
-                        v.Volume = 0
-                    end
-                end
-            end
+		local function isSlashEffect(obj)
+			return (obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam")) and not isFromBall(obj)
+		end
 
-            hookConn = workspace.DescendantAdded:Connect(function(obj)
-                if obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
-                    if obj.Enabled then
-                        obj.Enabled = false
-                        hiddenOld[obj] = true
-                    end
-                elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-                    if obj.Volume > 0 then
-                        mutedSounds[obj] = obj.Volume
-                        obj:Stop()
-                        obj.Volume = 0
-                    end
-                end
-            end)
-        else
-            Instance.new = origNew
-            if hookConn then hookConn:Disconnect() end
+		local function hideEffect(obj)
+			if isSlashEffect(obj) and obj.Enabled ~= false then
+				hiddenEffects[obj] = true
+				obj.Enabled = false
+			end
+		end
 
-            for v in pairs(hiddenOld) do
-                if v and v.Parent then
-                    pcall(function() v.Enabled = true end)
-                end
-            end
-            hiddenOld = {}
+		local function muteSound(obj)
+			if obj:IsA("Sound") and obj.Name:lower():find("swing") and obj.Volume > 0 then
+				if not mutedSounds[obj] then
+					mutedSounds[obj] = obj.Volume
+					obj.Volume = 0
+					obj:Stop()
+				end
+			end
+		end
 
-            for s, vol in pairs(mutedSounds) do
-                if s and s:IsA("Sound") then
-                    pcall(function() s.Volume = vol end)
-                end
-            end
-            mutedSounds = {}
-        end
-    end
+		if state then
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				hideEffect(obj)
+				muteSound(obj)
+			end
+
+			effectConnection = workspace.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					hideEffect(obj)
+					muteSound(obj)
+				end)
+			end)
+		else
+			if effectConnection then effectConnection:Disconnect() end
+
+			for obj in pairs(hiddenEffects) do
+				if obj and obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
+					pcall(function()
+						obj.Enabled = true
+					end)
+				end
+			end
+			hiddenEffects = {}
+
+			for obj, vol in pairs(mutedSounds) do
+				if obj and obj:IsA("Sound") then
+					pcall(function()
+						obj.Volume = vol
+					end)
+				end
+			end
+			mutedSounds = {}
+		end
+	end
 })
