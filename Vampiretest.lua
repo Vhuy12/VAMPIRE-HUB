@@ -2527,82 +2527,88 @@ function disableSmoothMode()
 end
 
 local noRenderSection = misc:AddSection({
-    Name = "no render",
-    Position = "left"
+	Name = "no render",
+	Position = "left"
 })
 
 local conn
 local mutedSounds = {}
-local disabledEffects = {}
+local invisibleParts = {}
 
 noRenderSection:AddToggle({
-    Name = "no render",
-    Callback = function(state)
-        local function isFromBall(obj)
-            local model = obj:FindFirstAncestorWhichIsA("Model")
-            return model and model.Name:lower():find("ball")
-        end
+	Name = "no render",
+	Callback = function(state)
+		local function isFromBall(obj)
+			local model = obj:FindFirstAncestorWhichIsA("Model")
+			return model and model.Name:lower():find("ball")
+		end
 
-        local function isEffect(obj)
-            return (obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam"))
-                and not isFromBall(obj)
-        end
+		local function isSlashPart(obj)
+			return obj:IsA("BasePart") and not isFromBall(obj) and (
+				obj.Name:lower():find("slash") or
+				obj.Name:lower():find("sword") or
+				obj.Name:lower():find("trail") or
+				obj.Name:lower():find("effect")
+			)
+		end
 
-        local function disableEffect(obj)
-            if isEffect(obj) then
-                if obj.Enabled ~= false then
-                    obj:SetAttribute("__NoRender_Enabled", obj.Enabled)
-                    obj.Enabled = false
-                    disabledEffects[obj] = true
-                end
-            end
-        end
+		local function muteSwing(obj)
+			if obj:IsA("Sound") and obj.Name:lower():find("swing") then
+				if not mutedSounds[obj] then
+					mutedSounds[obj] = obj.Volume
+					obj.Volume = 0
+					obj:Stop()
+				end
+			end
+		end
 
-        local function muteSwing(obj)
-            if obj:IsA("Sound") and obj.Name:lower():find("swing") then
-                if not mutedSounds[obj] and obj.Volume > 0 then
-                    mutedSounds[obj] = obj.Volume
-                    obj.Volume = 0
-                    obj:Stop()
-                end
-            end
-        end
+		local function hideSlash(obj)
+			if isSlashPart(obj) and obj.Transparency < 1 then
+				invisibleParts[obj] = obj.Transparency
+				obj.Transparency = 1
+				if obj:FindFirstChildOfClass("Decal") then
+					for _, d in ipairs(obj:GetChildren()) do
+						if d:IsA("Decal") or d:IsA("Texture") then
+							invisibleParts[d] = d.Transparency
+							d.Transparency = 1
+						end
+					end
+				end
+			end
+		end
 
-        if state then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                disableEffect(obj)
-                muteSwing(obj)
-            end
+		if state then
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				hideSlash(obj)
+				muteSwing(obj)
+			end
 
-            conn = workspace.DescendantAdded:Connect(function(obj)
-                task.defer(function()
-                    disableEffect(obj)
-                    muteSwing(obj)
-                end)
-            end)
-        else
-            if conn then conn:Disconnect() end
-            for obj, _ in pairs(disabledEffects) do
-                if obj and obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
-                    local prev = obj:GetAttribute("__NoRender_Enabled")
-                    if prev ~= nil then
-                        pcall(function()
-                            obj.Enabled = prev
-                        end)
-                        obj:SetAttribute("__NoRender_Enabled", nil)
-                    end
-                end
-            end
-            disabledEffects = {}
+			conn = workspace.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					hideSlash(obj)
+					muteSwing(obj)
+				end)
+			end)
+		else
+			if conn then conn:Disconnect() conn = nil end
 
-            for obj, vol in pairs(mutedSounds) do
-                if obj and obj:IsA("Sound") then
-                    pcall(function()
-                        obj.Volume = vol
-                    end)
-                end
-            end
-            mutedSounds = {}
-        end
-    end
+			for obj, value in pairs(invisibleParts) do
+				if obj and obj:IsA("Instance") then
+					pcall(function()
+						obj.Transparency = value
+					end)
+				end
+			end
+			invisibleParts = {}
+
+			for obj, vol in pairs(mutedSounds) do
+				if obj and obj:IsA("Sound") then
+					pcall(function()
+						obj.Volume = vol
+					end)
+				end
+			end
+			mutedSounds = {}
+		end
+	end
 })
