@@ -2531,62 +2531,68 @@ local noRenderSection = misc:AddSection({
     Position = "left"
 })
 
-local conn
-local hiddenEffects = {}
+local origNew = Instance.new
+local hiddenOld = {}
 local mutedSounds = {}
+local hookConn
 
 noRenderSection:AddToggle({
     Name = "no render",
-    Callback = function(state)
-        -- Xác định VFX chém
-        local function isSlashVFX(obj)
-            if not obj:IsDescendantOf(workspace) then return false end
-            -- Loại trừ tất cả object nằm trong mô hình Ball
-            local model = obj:FindFirstAncestorWhichIsA("Model")
-            if model and model.Name:lower():find("ball") then return false end
-            return obj:IsA("ParticleEmitter")
-                or obj:IsA("Trail")
-                or obj:IsA("Beam")
-        end
-
-        -- Xử lý ẩn VFX và mute Sound
-        local function handle(obj)
-            if isSlashVFX(obj) and obj.Enabled ~= false then
-                hiddenEffects[obj] = obj.Enabled
-                obj.Enabled = false
-            elseif obj:IsA("Sound") and obj.Volume > 0 then
-                mutedSounds[obj] = obj.Volume
-                obj:Stop()
-                obj.Volume = 0
+    Callback = function(on)
+        if on then
+            Instance.new = function(class, parent, ...)
+                if class == "Trail" or class == "ParticleEmitter" or class == "Beam" then
+                    return origNew("Folder", parent)
+                end
+                return origNew(class, parent, ...)
             end
-        end
 
-        if state then
-            -- 1. Ẩn tạm VFX + mute Sound có sẵn
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                handle(obj)
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("Trail") or v:IsA("ParticleEmitter") or v:IsA("Beam") then
+                    if v.Enabled then
+                        v.Enabled = false
+                        hiddenOld[v] = true
+                    end
+                elseif v:IsA("Sound") and v.Name:lower():find("swing") then
+                    if v.Volume > 0 then
+                        mutedSounds[v] = v.Volume
+                        v:Stop()
+                        v.Volume = 0
+                    end
+                end
             end
-            -- 2. Theo dõi VFX/Sound mới
-            conn = workspace.DescendantAdded:Connect(handle)
+
+            hookConn = workspace.DescendantAdded:Connect(function(obj)
+                if obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
+                    if obj.Enabled then
+                        obj.Enabled = false
+                        hiddenOld[obj] = true
+                    end
+                elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
+                    if obj.Volume > 0 then
+                        mutedSounds[obj] = obj.Volume
+                        obj:Stop()
+                        obj.Volume = 0
+                    end
+                end
+            end)
         else
-            -- 3. Ngắt theo dõi
-            if conn then conn:Disconnect() conn = nil end
-            -- 4. Khôi phục Sound
-            for sound, vol in pairs(mutedSounds) do
-                if sound and sound:IsA("Sound") then
-                    pcall(function() sound.Volume = vol end)
+            Instance.new = origNew
+            if hookConn then hookConn:Disconnect() end
+
+            for v in pairs(hiddenOld) do
+                if v and v.Parent then
+                    pcall(function() v.Enabled = true end)
+                end
+            end
+            hiddenOld = {}
+
+            for s, vol in pairs(mutedSounds) do
+                if s and s:IsA("Sound") then
+                    pcall(function() s.Volume = vol end)
                 end
             end
             mutedSounds = {}
-            -- 5. Khôi phục VFX
-            for eff, wasEnabled in pairs(hiddenEffects) do
-                if eff and eff:IsA("ParticleEmitter") 
-                       or eff:IsA("Trail") 
-                       or eff:IsA("Beam") then
-                    pcall(function() eff.Enabled = wasEnabled end)
-                end
-            end
-            hiddenEffects = {}
         end
     end
 })
