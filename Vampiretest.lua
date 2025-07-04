@@ -2532,80 +2532,70 @@ local noRenderSection = misc:AddSection({
 })
 
 local effectConnection
-local hiddenObjects = {}
-local hiddenSounds = {}
+local soundConnection
+local swingSounds = {}
 
 noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
-		local function isPartOfBall(obj)
+		local function isBallObject(obj)
 			local name = obj.Name:lower()
 			if name:find("ball") then return true end
 			if obj.Parent and obj.Parent.Name:lower():find("ball") then return true end
-			if obj:IsDescendantOf(workspace:FindFirstChild("Ball") or Instance.new("Folder")) then return true end
 			return false
 		end
 
 		local function isSlashEffect(obj)
-			if not obj:IsDescendantOf(workspace) then return false end
-			if isPartOfBall(obj) then return false end
-			local n = obj.Name:lower()
-			return n:find("slash") or n:find("trail") or n:find("glow") or n:find("effect") or n:find("vfx") or n:find("swing") or n:find("sword")
+			local name = obj.Name:lower()
+			return (name:find("slash") or name:find("trail") or name:find("glow")
+				or name:find("sword") or name:find("vfx") or name:find("effect"))
+				and not isBallObject(obj)
 		end
 
 		if state then
-			-- Ẩn toàn bộ hiệu ứng chém & âm thanh swing
+			-- Xoá tất cả hiệu ứng slash hiện tại
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isSlashEffect(obj) then
-					if not hiddenObjects[obj] and obj.Parent then
-						hiddenObjects[obj] = obj.Parent
-						obj.Parent = nil
-					end
+					pcall(function()
+						obj:Destroy()
+					end)
 				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-					if not hiddenSounds[obj] then
-						hiddenSounds[obj] = obj.Volume
-						obj.Volume = 0
-					end
+					swingSounds[obj] = obj.Volume
+					obj.Volume = 0
+					obj:Stop()
 				end
 			end
 
-			-- Theo dõi object mới được tạo ra
+			-- Theo dõi hiệu ứng mới sinh ra
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isSlashEffect(obj) then
 					task.delay(0.01, function()
-						if obj and obj.Parent then
-							hiddenObjects[obj] = obj.Parent
-							obj.Parent = nil
+						if obj and obj:IsDescendantOf(workspace) then
+							pcall(function()
+								obj:Destroy()
+							end)
 						end
 					end)
 				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
-					hiddenSounds[obj] = obj.Volume
+					swingSounds[obj] = obj.Volume
 					obj.Volume = 0
+					obj:Stop()
 				end
 			end)
 
 		else
-			-- Khôi phục hiệu ứng
+			-- Tắt theo dõi
 			if effectConnection then effectConnection:Disconnect() end
 
-			for obj, originalParent in pairs(hiddenObjects) do
-				if obj and originalParent then
+			-- Khôi phục âm thanh swing
+			for obj, vol in pairs(swingSounds) do
+				if obj and obj:IsA("Sound") then
 					pcall(function()
-						obj.Parent = originalParent
+						obj.Volume = vol
 					end)
 				end
 			end
-
-			for obj, originalVolume in pairs(hiddenSounds) do
-				if obj then
-					pcall(function()
-						obj.Volume = originalVolume
-					end)
-				end
-			end
-
-			hiddenObjects = {}
-			hiddenSounds = {}
+			swingSounds = {}
 		end
 	end
 })
