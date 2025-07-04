@@ -2540,83 +2540,60 @@ noRenderSection:AddToggle({
 	Name = "no render",
 	Callback = function(state)
 		if state then
-			local function isSlashEffect(obj)
-				return obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") or
-					obj:IsA("ShimmerEffect") or obj:IsA("Smoke") or
-					(obj.Name and (
-						obj.Name:lower():find("slash") or
-						obj.Name:lower():find("trail") or
-						obj.Name:lower():find("glow") or
-						obj.Name:lower():find("vfx") or
-						obj.Name:lower():find("effect")
-					))
-			end
-
-			local function isBall(obj)
-				return obj.Name:lower():find("ball") or (obj:IsA("BasePart") and obj:FindFirstAncestorWhichIsA("Model") and obj:FindFirstAncestorWhichIsA("Model").Name:lower():find("ball"))
+			local function isSwordEffect(obj)
+				if not obj.Name then return false end
+				local name = obj.Name:lower()
+				return name:find("slash") or name:find("swing") or name:find("effect") or name:find("trail") or name:find("vfx") or name:find("sword")
 			end
 
 			for _, obj in ipairs(game:GetDescendants()) do
-				if isSlashEffect(obj) and not isBall(obj) then
-					pcall(function()
-						if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
-							if obj.Enabled ~= false then
-								table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
-								obj.Enabled = false
-							end
-						end
-					end)
-				elseif obj:IsA("Sound") then
-					pcall(function()
-						if obj.Volume > 0 then
-							table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
-							obj.Volume = 0
-						end
-					end)
+				if isSwordEffect(obj) then
+					if (obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles")) and obj.Enabled then
+						table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
+						obj.Enabled = false
+					end
+				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
+					if obj.Volume > 0 then
+						table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
+						obj.Volume = 0
+					end
 				end
 			end
 
 			effectConnection = game.DescendantAdded:Connect(function(obj)
-				if isSlashEffect(obj) and not isBall(obj) then
-					pcall(function()
-						if obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles") then
-							obj.Enabled = false
-							table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
-						end
-					end)
-				end
-			end)
-
-			muteConnection = game.DescendantAdded:Connect(function(obj)
-				if obj:IsA("Sound") then
-					pcall(function()
-						table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
-						obj.Volume = 0
-					end)
+				if isSwordEffect(obj) then
+					task.wait(0.01)
+					if obj and (obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("ParticleEmitter") or obj:IsA("Sparkles")) then
+						table.insert(HiddenEffects, {obj = obj, enabled = obj.Enabled})
+						obj.Enabled = false
+					end
+				elseif obj:IsA("Sound") and obj.Name:lower():find("swing") then
+					table.insert(HiddenSounds, {obj = obj, volume = obj.Volume})
+					obj.Volume = 0
 				end
 			end)
 		else
-			if muteConnection then muteConnection:Disconnect() muteConnection = nil end
-			if effectConnection then effectConnection:Disconnect() effectConnection = nil end
-
-			for _, data in ipairs(HiddenSounds) do
-				if data and data.obj and data.obj:IsA("Sound") then
-					pcall(function()
-						data.obj.Volume = data.volume
-					end)
-				end
-			end
+			if effectConnection then effectConnection:Disconnect() end
+			if muteConnection then muteConnection:Disconnect() end
 
 			for _, data in ipairs(HiddenEffects) do
-				if data and data.obj and (data.obj:IsA("Trail") or data.obj:IsA("Beam") or data.obj:IsA("ParticleEmitter") or data.obj:IsA("Sparkles")) then
+				if data.obj and data.obj:IsA("Instance") then
 					pcall(function()
 						data.obj.Enabled = data.enabled
 					end)
 				end
 			end
 
-			HiddenSounds = {}
+			for _, data in ipairs(HiddenSounds) do
+				if data.obj and data.obj:IsA("Sound") then
+					pcall(function()
+						data.obj.Volume = data.volume
+					end)
+				end
+			end
+
 			HiddenEffects = {}
+			HiddenSounds = {}
 		end
 	end
 })
