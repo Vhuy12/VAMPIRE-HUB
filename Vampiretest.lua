@@ -2527,75 +2527,82 @@ function disableSmoothMode()
 end
 
 local noRenderSection = misc:AddSection({
-	Name = "no render",
-	Position = "left"
+    Name = "no render",
+    Position = "left"
 })
 
-local effectConnection
-local hiddenEffects = {}
+local conn
 local mutedSounds = {}
+local disabledEffects = {}
 
 noRenderSection:AddToggle({
-	Name = "no render",
-	Callback = function(state)
-		local function isFromBall(obj)
-			local model = obj:FindFirstAncestorWhichIsA("Model")
-			return model and model.Name:lower():find("ball")
-		end
+    Name = "no render",
+    Callback = function(state)
+        local function isFromBall(obj)
+            local model = obj:FindFirstAncestorWhichIsA("Model")
+            return model and model.Name:lower():find("ball")
+        end
 
-		local function isSlashEffect(obj)
-			return (obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam")) and not isFromBall(obj)
-		end
+        local function isEffect(obj)
+            return (obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam"))
+                and not isFromBall(obj)
+        end
 
-		local function hideEffect(obj)
-			if isSlashEffect(obj) and obj.Enabled ~= false then
-				hiddenEffects[obj] = true
-				obj.Enabled = false
-			end
-		end
+        local function disableEffect(obj)
+            if isEffect(obj) then
+                if obj.Enabled ~= false then
+                    obj:SetAttribute("__NoRender_Enabled", obj.Enabled)
+                    obj.Enabled = false
+                    disabledEffects[obj] = true
+                end
+            end
+        end
 
-		local function muteSound(obj)
-			if obj:IsA("Sound") and obj.Name:lower():find("swing") and obj.Volume > 0 then
-				if not mutedSounds[obj] then
-					mutedSounds[obj] = obj.Volume
-					obj.Volume = 0
-					obj:Stop()
-				end
-			end
-		end
+        local function muteSwing(obj)
+            if obj:IsA("Sound") and obj.Name:lower():find("swing") then
+                if not mutedSounds[obj] and obj.Volume > 0 then
+                    mutedSounds[obj] = obj.Volume
+                    obj.Volume = 0
+                    obj:Stop()
+                end
+            end
+        end
 
-		if state then
-			for _, obj in ipairs(workspace:GetDescendants()) do
-				hideEffect(obj)
-				muteSound(obj)
-			end
+        if state then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                disableEffect(obj)
+                muteSwing(obj)
+            end
 
-			effectConnection = workspace.DescendantAdded:Connect(function(obj)
-				task.defer(function()
-					hideEffect(obj)
-					muteSound(obj)
-				end)
-			end)
-		else
-			if effectConnection then effectConnection:Disconnect() end
+            conn = workspace.DescendantAdded:Connect(function(obj)
+                task.defer(function()
+                    disableEffect(obj)
+                    muteSwing(obj)
+                end)
+            end)
+        else
+            if conn then conn:Disconnect() end
+            for obj, _ in pairs(disabledEffects) do
+                if obj and obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
+                    local prev = obj:GetAttribute("__NoRender_Enabled")
+                    if prev ~= nil then
+                        pcall(function()
+                            obj.Enabled = prev
+                        end)
+                        obj:SetAttribute("__NoRender_Enabled", nil)
+                    end
+                end
+            end
+            disabledEffects = {}
 
-			for obj in pairs(hiddenEffects) do
-				if obj and obj:IsA("Trail") or obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
-					pcall(function()
-						obj.Enabled = true
-					end)
-				end
-			end
-			hiddenEffects = {}
-
-			for obj, vol in pairs(mutedSounds) do
-				if obj and obj:IsA("Sound") then
-					pcall(function()
-						obj.Volume = vol
-					end)
-				end
-			end
-			mutedSounds = {}
-		end
-	end
+            for obj, vol in pairs(mutedSounds) do
+                if obj and obj:IsA("Sound") then
+                    pcall(function()
+                        obj.Volume = vol
+                    end)
+                end
+            end
+            mutedSounds = {}
+        end
+    end
 })
