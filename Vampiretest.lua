@@ -2540,12 +2540,16 @@ noRenderSection:AddToggle({
 	Callback = function(state)
 		if state then
 			local function isSlashEffect(obj)
-				if not obj.Name then return false end
-				local name = obj.Name:lower()
-				return name:find("slash") or name:find("trail") or name:find("effect") or name:find("swing") or name:find("sword")
+				if not obj:IsDescendantOf(workspace) then return false end
+				local n = obj.Name:lower()
+				local isEffect = n:find("slash") or n:find("trail") or n:find("effect") or n:find("swing") or n:find("sword")
+
+				-- ❌ Loại trừ quả bóng
+				local isBall = n:find("ball") or (obj.Parent and obj.Parent.Name:lower():find("ball"))
+
+				return isEffect and not isBall
 			end
 
-			-- 1. Ẩn toàn bộ hiệu ứng chém hiện tại
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isSlashEffect(obj) then
 					if obj.Parent ~= nil then
@@ -2558,7 +2562,6 @@ noRenderSection:AddToggle({
 				end
 			end
 
-			-- 2. Theo dõi hiệu ứng mới tạo
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isSlashEffect(obj) then
 					task.delay(0.01, function()
@@ -2576,7 +2579,6 @@ noRenderSection:AddToggle({
 		else
 			if effectConnection then effectConnection:Disconnect() end
 
-			-- 3. Khôi phục effect đã ẩn
 			for obj, parent in pairs(hiddenObjects) do
 				if obj and parent then
 					pcall(function()
