@@ -2532,22 +2532,9 @@ local noRenderSection = misc:AddSection({
 })
 
 local effectConnection
-local swingSounds = {}
-
--- 🟢 Danh sách từ khoá âm thanh chém phổ biến
-local swordKeywords = {
-	"swing", "slash", "hit", "cut", "attack", "blade", "strike", "sword"
-}
-
-local function isSwordSound(name)
-	name = name:lower()
-	for _, keyword in pairs(swordKeywords) do
-		if name:find(keyword) then
-			return true
-		end
-	end
-	return false
-end
+local muteConnection
+local mutedSounds = {}
+local hiddenEffects = {}
 
 noRenderSection:AddToggle({
 	Name = "no render",
@@ -2558,49 +2545,83 @@ noRenderSection:AddToggle({
 		end
 
 		local function isVisualEffect(obj)
-			return (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam")
-				or obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("Fire")
-				or obj:IsA("Smoke") or obj:IsA("Sparkles"))
+			return (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam"))
 				and not isFromBall(obj)
 		end
 
+		local function hideEffect(obj)
+			if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+				if obj.Enabled ~= false then
+					hiddenEffects[obj] = true
+					obj.Enabled = false
+				end
+			end
+		end
+
+		local function restoreEffect(obj)
+			if hiddenEffects[obj] then
+				pcall(function()
+					obj.Enabled = true
+				end)
+			end
+		end
+
 		if state then
-			-- Xoá hiệu ứng hiện tại + tiếng chém
 			for _, obj in ipairs(game:GetDescendants()) do
 				if isVisualEffect(obj) then
-					pcall(function() obj:Destroy() end)
-				elseif obj:IsA("Sound") and isSwordSound(obj.Name) then
-					swingSounds[obj] = obj.Volume
+					hideEffect(obj)
+				elseif obj:IsA("Sound") and obj.Volume > 0 then
+					if not mutedSounds[obj] then
+						mutedSounds[obj] = obj.Volume
+					end
 					obj.Volume = 0
 					obj:Stop()
 				end
 			end
 
-			-- Theo dõi tạo mới
 			effectConnection = game.DescendantAdded:Connect(function(obj)
 				if isVisualEffect(obj) then
 					task.defer(function()
-						pcall(function() obj:Destroy() end)
+						hideEffect(obj)
 					end)
-				elseif obj:IsA("Sound") and isSwordSound(obj.Name) then
-					swingSounds[obj] = obj.Volume
+				elseif obj:IsA("Sound") and obj.Volume > 0 then
+					if not mutedSounds[obj] then
+						mutedSounds[obj] = obj.Volume
+					end
 					obj.Volume = 0
 					obj:Stop()
 				end
 			end)
 
-		else
-			-- Khôi phục âm thanh
-			if effectConnection then effectConnection:Disconnect() end
+			muteConnection = game:GetService("RunService").Heartbeat:Connect(function()
+				for _, obj in ipairs(game:GetDescendants()) do
+					if obj:IsA("Sound") and obj.IsPlaying and obj.Volume > 0 then
+						if not mutedSounds[obj] then
+							mutedSounds[obj] = obj.Volume
+						end
+						obj.Volume = 0
+						obj:Stop()
+					end
+				end
+			end)
 
-			for obj, vol in pairs(swingSounds) do
+		else
+			if effectConnection then effectConnection:Disconnect() end
+			if muteConnection then muteConnection:Disconnect() end
+
+			for obj, vol in pairs(mutedSounds) do
 				if obj and obj:IsA("Sound") then
 					pcall(function()
 						obj.Volume = vol
 					end)
 				end
 			end
-			swingSounds = {}
+			mutedSounds = {}
+
+			for obj, _ in pairs(hiddenEffects) do
+				restoreEffect(obj)
+			end
+			hiddenEffects = {}
 		end
 	end
-})					
+})
