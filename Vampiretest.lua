@@ -905,7 +905,7 @@ module:AddToggle({
 
                     local Velocity = Zoomies.VectorVelocity
 
-                    local Distance = (Player.Character.PrimaryPart.Position - Ball.Position).Magnitude
+                    local Distance = Player:DistanceFromCharacter(Ball.Position)
 
                     local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue() / 10
 
