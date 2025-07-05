@@ -1234,17 +1234,11 @@ SpamParry:AddToggle({
             Connections_Manager['Animation Fix'] = RunService.Heartbeat:Connect(function()
                 if Parries > 0 then
                     if Grab_Parry then
-                        Grab_Parry:Stop()
-                        Grab_Parry:Play()
+                        if not Grab_Parry.IsPlaying then
+                            Grab_Parry:Play()
+                        end
                     else
                         Auto_Parry.Parry_Animation()
-                    end
-
-                    local char = Player.Character
-                    local hum = char and char:FindFirstChildOfClass("Humanoid")
-
-                    if hum then
-                        hum.CameraOffset = Vector3.new(0, math.sin(tick()*30)*0.1, 0)
                     end
                 end
             end)
@@ -1252,12 +1246,6 @@ SpamParry:AddToggle({
             if Connections_Manager['Animation Fix'] then
                 Connections_Manager['Animation Fix']:Disconnect()
                 Connections_Manager['Animation Fix'] = nil
-            end
-
-            local char = Player.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.CameraOffset = Vector3.zero
             end
 
             if Grab_Parry then
