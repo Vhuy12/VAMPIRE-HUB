@@ -877,151 +877,57 @@ module:AddToggle({
 	Callback = function(value)
 	autoSaveConfig()
         if value then
-            Connections_Manager['Auto Parry'] = RunService.PreSimulation:Connect(function()
-                local One_Ball = Auto_Parry.Get_Ball()
-                local Balls = Auto_Parry.Get_Balls()
+            Connections_Manager['Auto Parry'] = RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if not lastAutoParry then lastAutoParry = 0 end
+    if now - lastAutoParry < 0.015 then return end
+    lastAutoParry = now
 
-                for _, Ball in pairs(Balls) do
+    local Ball = Auto_Parry.Get_Ball()
+    if not Ball then return end
 
-                    if not Ball then
-                        return
-                    end
+    local Zoomies = Ball:FindFirstChild('zoomies')
+    if not Zoomies then return end
 
-                    local Zoomies = Ball:FindFirstChild('zoomies')
-                    if not Zoomies then
-                        return
-                    end
+    local Ball_Target = Ball:GetAttribute('target')
+    if Ball_Target ~= tostring(Player) then return end
 
-                    Ball:GetAttributeChangedSignal('target'):Once(function()
-                        Parried = false
-                    end)
+    local Velocity = Zoomies.VectorVelocity
+    local Speed = Velocity.Magnitude
 
-                    if Parried then
-                        return
-                    end
+    local predictionTime = 0.1
+    local predictedPosition = Ball.Position + Velocity * predictionTime
+    local Distance = (Player.Character.PrimaryPart.Position - predictedPosition).Magnitude
 
-                    local Ball_Target = Ball:GetAttribute('target')
-                    local One_Target = One_Ball:GetAttribute('target')
+    local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
+    local Dot = Direction:Dot(Velocity.Unit)
+    if Dot < 0.5 then return end
 
-                    local Velocity = Zoomies.VectorVelocity
+    local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue() / 10
+    local speed_divisor = 2.4 + math.min(math.max(Speed - 9.5, 0), 650) * 0.002
+    local effectiveMultiplier = getgenv().RandomParryAccuracyEnabled
+        and (0.7 + (math.random(1, 100) - 1) * (0.35 / 99))
+        or Speed_Divisor_Multiplier
 
-                    local Distance = Player:DistanceFromCharacter(Ball.Position)
+    local Parry_Accuracy = Ping + math.max(Speed / (speed_divisor * effectiveMultiplier), 9.5)
 
-                    local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue() / 10
+    if Auto_Parry.Is_Curved() then
+        Parry_Accuracy += 5
+    end
 
-                    local Ping_Threshold = math.clamp(Ping / 10, 5, 17)
+    if Distance <= Parry_Accuracy then
+        if getgenv().CooldownProtection and isCooldownInEffect1(ParryCD) then
+            game:GetService("ReplicatedStorage").Remotes.AbilityButtonPress:Fire()
+            return
+        end
 
-                    local Speed = Velocity.Magnitude
-
-                    local cappedSpeedDiff = math.min(math.max(Speed - 9.5, 0), 650)
-                    local speed_divisor_base = 2.4 + cappedSpeedDiff * 0.002
-
-                    local effectiveMultiplier = Speed_Divisor_Multiplier
-                    if getgenv().RandomParryAccuracyEnabled then
-                        if Speed < 200 then
-                            effectiveMultiplier = 0.7 + (math.random(40, 100) - 1) * (0.35 / 99)
-                        else
-                            effectiveMultiplier = 0.7 + (math.random(1, 100) - 1) * (0.35 / 99)
-                        end
-                    end
-
-                    local speed_divisor = speed_divisor_base * effectiveMultiplier
-                    local Parry_Accuracy = Ping_Threshold + math.max(Speed / speed_divisor, 9.5)
-
-                    local Curved = Auto_Parry.Is_Curved()
-
-
-                    if Phantom and Player.Character:FindFirstChild('ParryHighlight') and getgenv().PhantomV2Detection then
-                    --Controls:Disable()
-
-                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.UserInputType.Touch)
-
-                    Player.Character.Humanoid.WalkSpeed = 36
-                    Player.Character.Humanoid:MoveTo(Ball.Position)
-
-                    task.spawn(function()
-                        repeat
-                            if Player.Character.Humanoid.WalkSpeed ~= 36 then
-                                Player.Character.Humanoid.WalkSpeed = 36
-                            end
-
-                            task.wait()
-
-                        until not Phantom
-                    end)
-
-                    Ball:GetAttributeChangedSignal('target'):Once(function()
-                        --Controls:Enable()
-
-                        ContextActionService:UnbindAction('BlockPlayerMovement')
-                        Phantom = false
-
-                        Player.Character.Humanoid:MoveTo(Player.Character.HumanoidRootPart.Position)
-                        Player.Character.Humanoid.WalkSpeed = 10
-
-                        task.delay(3, function()
-                            Player.Character.Humanoid.WalkSpeed = 36
-                        end)
-                    end)
-                end
-
-                if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy and Phantom then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
-
-                    Parried = true
-                end
-
-                    if Ball:FindFirstChild('AeroDynamicSlashVFX') then
-                        Debris:AddItem(Ball.AeroDynamicSlashVFX, 0)
-                        Tornado_Time = tick()
-                    end
-
-                    if Runtime:FindFirstChild('Tornado') then
-                        if (tick() - Tornado_Time) < (Runtime.Tornado:GetAttribute("TornadoTime") or 1) + 0.314159 then
-                        return
-                        end
-                    end
-
-                    if One_Target == tostring(Player) and Curved then
-                        return
-                    end
-
-                    if Ball:FindFirstChild("ComboCounter") then
-                        return
-                    end
-
-                    local Singularity_Cape = Player.Character.PrimaryPart:FindFirstChild('SingularityCape')
-                    if Singularity_Cape then
-                        return
-                    end 
-
-                    if getgenv().InfinityDetection and Infinity then
-                        return
-                    end
-
-                    if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
-                        if getgenv().AutoAbility and AutoAbility() then
-                            return
-                        end
-                    end
-
-                    if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
-                        if getgenv().CooldownProtection and cooldownProtection() then
-                            return
-                        end
-
-                        local Parry_Time = os.clock()
-                        local Time_View = Parry_Time - (Last_Parry)
-                        if Time_View > 0.5 then
-                            Auto_Parry.Parry_Animation()
-                        end
-
-                        if getgenv().AutoParryKeypress then
-                            VirtualInputService:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
-                        else
-                            Auto_Parry.Parry(Selected_Parry_Type)
-                        end
+        if getgenv().AutoParryKeypress then
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+        else
+            Auto_Parry.Parry(Selected_Parry_Type)
+        end
+    end
+end)
 
                         Last_Parry = Parry_Time
                         Parried = true
