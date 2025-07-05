@@ -1113,92 +1113,98 @@ local SpamParry = Blatant:AddSection({
 	Position = "right",
 });
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remote = ReplicatedStorage:FindFirstChild("AnimationFixRemote")
+
+if not Remote then
+    Remote = Instance.new("RemoteEvent")
+    Remote.Name = "AnimationFixRemote"
+    Remote.Parent = ReplicatedStorage
+end
+
+Remote.OnClientEvent:Connect(function()
+    pcall(function()
+        if Grab_Parry then
+            if not Grab_Parry.IsPlaying then
+                Grab_Parry:Play()
+            end
+        else
+            Auto_Parry.Parry_Animation()
+        end
+    end)
+end)
+
 SpamParry:AddToggle({
 	Name = "Auto Spam Parry",
 	Callback = function(value)
-	autoSaveConfig()
-        if value then
-            Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
-    local now = tick()
-    if not lastAutoSpam then lastAutoSpam = 0 end
-    if now - lastAutoSpam < 0.005 then return end
-    lastAutoSpam = now
-                local Ball = Auto_Parry.Get_Ball()
+		autoSaveConfig()
+		if value then
+			Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
+				local now = tick()
+				if not lastAutoSpam then lastAutoSpam = 0 end
+				if now - lastAutoSpam < 0.005 then return end
+				lastAutoSpam = now
 
-                if not Ball then
-                    return
-                end
+				local Ball = Auto_Parry.Get_Ball()
+				if not Ball then return end
 
-                local Zoomies = Ball:FindFirstChild('zoomies')
+				local Zoomies = Ball:FindFirstChild('zoomies')
+				if not Zoomies then return end
 
-                if not Zoomies then
-                    return
-                end
+				Auto_Parry.Closest_Player()
 
-                Auto_Parry.Closest_Player()
+				local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue()
+				local Ping_Threshold = math.clamp(Ping / 10, 1, 16)
 
-                local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue()
+				local Ball_Target = Ball:GetAttribute('target')
+				local Ball_Properties = Auto_Parry:Get_Ball_Properties()
+				local Entity_Properties = Auto_Parry:Get_Entity_Properties()
 
-                local Ping_Threshold = math.clamp(Ping / 10, 1, 16)
+				local Spam_Accuracy = Auto_Parry.Spam_Service({
+					Ball_Properties = Ball_Properties,
+					Entity_Properties = Entity_Properties,
+					Ping = Ping_Threshold
+				})
 
-                local Ball_Target = Ball:GetAttribute('target')
+				local Target_Position = Closest_Entity.PrimaryPart.Position
+				local Target_Distance = Player:DistanceFromCharacter(Target_Position)
 
-                local Ball_Properties = Auto_Parry:Get_Ball_Properties()
-                local Entity_Properties = Auto_Parry:Get_Entity_Properties()
+				local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
+				local Ball_Direction = Zoomies.VectorVelocity.Unit
+				local Dot = Direction:Dot(Ball_Direction)
 
-                local Spam_Accuracy = Auto_Parry.Spam_Service({
-                    Ball_Properties = Ball_Properties,
-                    Entity_Properties = Entity_Properties,
-                    Ping = Ping_Threshold
-                })
+				local Distance = Player:DistanceFromCharacter(Ball.Position)
+				if not Ball_Target then return end
 
-                local Target_Position = Closest_Entity.PrimaryPart.Position
-                local Target_Distance = Player:DistanceFromCharacter(Target_Position)
+				if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then return end
 
-                local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
-                local Ball_Direction = Zoomies.VectorVelocity.Unit
+				local Pulsed = Player.Character:GetAttribute('Pulsed')
+				if Pulsed then return end
 
-                local Dot = Direction:Dot(Ball_Direction)
+				if Ball_Target == tostring(Player) and Target_Distance > 30 and Distance > 30 then return end
 
-                local Distance = Player:DistanceFromCharacter(Ball.Position)
+				local threshold = ParryThreshold
 
-                if not Ball_Target then
-                    return
-                end
-
-                if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then
-                    return
-                end
-                
-                local Pulsed = Player.Character:GetAttribute('Pulsed')
-
-                if Pulsed then
-                    return
-                end
-
-                if Ball_Target == tostring(Player) and Target_Distance > 30 and Distance > 30 then
-                    return
-                end
-
-                local threshold = ParryThreshold
-
-                if Distance <= Spam_Accuracy and Parries > threshold then
-                    if getgenv().SpamParryKeypress then
-                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
-                    else
-                        Auto_Parry.Parry(Selected_Parry_Type)
-                    end
-                end
-            end)
-        else
-            if Connections_Manager['Auto Spam'] then
-                Connections_Manager['Auto Spam']:Disconnect()
-                Connections_Manager['Auto Spam'] = nil
-            end
-        end
-    end
+				if Distance <= Spam_Accuracy and Parries > threshold then
+					if getgenv().SpamParryKeypress then
+						VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+					else
+						Auto_Parry.Parry(Selected_Parry_Type)
+						if Remote then
+							Remote:FireServer()
+						end
+					end
+				end
+			end)
+		else
+			if Connections_Manager['Auto Spam'] then
+				Connections_Manager['Auto Spam']:Disconnect()
+				Connections_Manager['Auto Spam'] = nil
+			end
+		end
+	end
 })
-
+						
 SpamParry:AddDropdown({
 	Name = "Parry Type",
 	Values = {
