@@ -1325,7 +1325,7 @@ ManualSpam:AddToggle({
             Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.01 then return end
+    if now - lastManualSpam < 0.005 then return end
     lastManualSpam = now
                 if getgenv().spamui then
                     return
