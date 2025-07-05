@@ -1121,7 +1121,7 @@ SpamParry:AddToggle({
             Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastAutoSpam then lastAutoSpam = 0 end
-    if now - lastAutoSpam < 0.08 then return end
+    if now - lastAutoSpam < 0.01 then return end
     lastAutoSpam = now
                 local Ball = Auto_Parry.Get_Ball()
 
@@ -1325,7 +1325,7 @@ ManualSpam:AddToggle({
             Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.05 then return end
+    if now - lastManualSpam < 0.01 then return end
     lastManualSpam = now
                 if getgenv().spamui then
                     return
