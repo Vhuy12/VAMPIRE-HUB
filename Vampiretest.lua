@@ -1224,8 +1224,10 @@ SpamParry:AddSlider({
 	end
 })
 						
+if not Connections_Manager then Connections_Manager = {} end
+
 SpamParry:AddToggle({
-    Name = "Animation Fix",
+    Name = "Animation Fix (Mobile)",
     Callback = function(value)
         autoSaveConfig()
         if value then
