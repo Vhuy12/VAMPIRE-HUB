@@ -1231,14 +1231,18 @@ SpamParry:AddToggle({
     Callback = function(value)
         autoSaveConfig()
         if value then
+            local lastPlay = 0
             Connections_Manager['Animation Fix'] = RunService.Heartbeat:Connect(function()
                 if Parries > 0 then
-                    if Grab_Parry then
-                        if not Grab_Parry.IsPlaying then
+                    if Grab_Parry and not Grab_Parry.IsPlaying then
+                        local now = tick()
+                        if now - lastPlay > 0.15 then
                             Grab_Parry:Play()
+                            lastPlay = now
                         end
-                    else
+                    elseif not Grab_Parry then
                         Auto_Parry.Parry_Animation()
+                        lastPlay = tick()
                     end
                 end
             end)
