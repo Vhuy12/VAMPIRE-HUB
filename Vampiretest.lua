@@ -1224,9 +1224,8 @@ SpamParry:AddSlider({
 	end
 })
 						
-if isMobile then
 SpamParry:AddToggle({
-    Name = "Animation Fix (Mobile)",
+    Name = "Animation Fix",
     Callback = function(value)
         autoSaveConfig()
         if value then
