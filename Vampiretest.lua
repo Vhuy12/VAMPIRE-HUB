@@ -1301,7 +1301,6 @@ SpamParry:AddSlider({
             end
         end
     })
-end
 
 SpamParry:AddToggle({
     Name = "Keypress",
