@@ -1260,25 +1260,29 @@ local ManualSpam = Blatant:AddSection({
 });
 
 ManualSpam:AddToggle({
-	Name = "Manual Spam Parry",
-	Callback = function(value)
-	autoSaveConfig()
+    Name = "Manual Spam Parry",
+    Callback = function(value)
+        autoSaveConfig()
         if value then
             Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
-    local now = tick()
-    if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.005 then return end
-    lastManualSpam = now
-                if getgenv().spamui then
-                    return
-                end
+                local now = tick()
+                if not lastManualSpam then lastManualSpam = 0 end
+                if now - lastManualSpam < 0.0167 then return end
+                lastManualSpam = now
+
+                if getgenv().spamui then return end
 
                 if getgenv().ManualSpamKeypress then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
                 else
                     Auto_Parry.Parry(Selected_Parry_Type)
                 end
 
+                task.delay(0.05, function()
+                    if Grab_Parry then
+                        Grab_Parry:AdjustSpeed(0)
+                    end
+                end)
             end)
         else
             if Connections_Manager['Manual Spam'] then
