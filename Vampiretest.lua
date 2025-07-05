@@ -1118,7 +1118,11 @@ SpamParry:AddToggle({
 	Callback = function(value)
 	autoSaveConfig()
         if value then
-            Connections_Manager['Auto Spam'] = RunService.PreSimulation:Connect(function()
+            Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if not lastAutoSpam then lastAutoSpam = 0 end
+    if now - lastAutoSpam < 0.08 then return end
+    lastAutoSpam = now
                 local Ball = Auto_Parry.Get_Ball()
 
                 if not Ball then
@@ -1318,7 +1322,11 @@ ManualSpam:AddToggle({
 	Callback = function(value)
 	autoSaveConfig()
         if value then
-            Connections_Manager['Manual Spam'] = RunService.PreSimulation:Connect(function()
+            Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if not lastManualSpam then lastManualSpam = 0 end
+    if now - lastManualSpam < 0.05 then return end
+    lastManualSpam = now
                 if getgenv().spamui then
                     return
                 end
