@@ -1113,98 +1113,92 @@ local SpamParry = Blatant:AddSection({
 	Position = "right",
 });
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Remote = ReplicatedStorage:FindFirstChild("AnimationFixRemote")
-
-if not Remote then
-    Remote = Instance.new("RemoteEvent")
-    Remote.Name = "AnimationFixRemote"
-    Remote.Parent = ReplicatedStorage
-end
-
-Remote.OnClientEvent:Connect(function()
-    pcall(function()
-        if Grab_Parry then
-            if not Grab_Parry.IsPlaying then
-                Grab_Parry:Play()
-            end
-        else
-            Auto_Parry.Parry_Animation()
-        end
-    end)
-end)
-
 SpamParry:AddToggle({
 	Name = "Auto Spam Parry",
 	Callback = function(value)
-		autoSaveConfig()
-		if value then
-			Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
-				local now = tick()
-				if not lastAutoSpam then lastAutoSpam = 0 end
-				if now - lastAutoSpam < 0.005 then return end
-				lastAutoSpam = now
+	autoSaveConfig()
+        if value then
+            Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if not lastAutoSpam then lastAutoSpam = 0 end
+    if now - lastAutoSpam < 0.005 then return end
+    lastAutoSpam = now
+                local Ball = Auto_Parry.Get_Ball()
 
-				local Ball = Auto_Parry.Get_Ball()
-				if not Ball then return end
+                if not Ball then
+                    return
+                end
 
-				local Zoomies = Ball:FindFirstChild('zoomies')
-				if not Zoomies then return end
+                local Zoomies = Ball:FindFirstChild('zoomies')
 
-				Auto_Parry.Closest_Player()
+                if not Zoomies then
+                    return
+                end
 
-				local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue()
-				local Ping_Threshold = math.clamp(Ping / 10, 1, 16)
+                Auto_Parry.Closest_Player()
 
-				local Ball_Target = Ball:GetAttribute('target')
-				local Ball_Properties = Auto_Parry:Get_Ball_Properties()
-				local Entity_Properties = Auto_Parry:Get_Entity_Properties()
+                local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue()
 
-				local Spam_Accuracy = Auto_Parry.Spam_Service({
-					Ball_Properties = Ball_Properties,
-					Entity_Properties = Entity_Properties,
-					Ping = Ping_Threshold
-				})
+                local Ping_Threshold = math.clamp(Ping / 10, 1, 16)
 
-				local Target_Position = Closest_Entity.PrimaryPart.Position
-				local Target_Distance = Player:DistanceFromCharacter(Target_Position)
+                local Ball_Target = Ball:GetAttribute('target')
 
-				local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
-				local Ball_Direction = Zoomies.VectorVelocity.Unit
-				local Dot = Direction:Dot(Ball_Direction)
+                local Ball_Properties = Auto_Parry:Get_Ball_Properties()
+                local Entity_Properties = Auto_Parry:Get_Entity_Properties()
 
-				local Distance = Player:DistanceFromCharacter(Ball.Position)
-				if not Ball_Target then return end
+                local Spam_Accuracy = Auto_Parry.Spam_Service({
+                    Ball_Properties = Ball_Properties,
+                    Entity_Properties = Entity_Properties,
+                    Ping = Ping_Threshold
+                })
 
-				if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then return end
+                local Target_Position = Closest_Entity.PrimaryPart.Position
+                local Target_Distance = Player:DistanceFromCharacter(Target_Position)
 
-				local Pulsed = Player.Character:GetAttribute('Pulsed')
-				if Pulsed then return end
+                local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
+                local Ball_Direction = Zoomies.VectorVelocity.Unit
 
-				if Ball_Target == tostring(Player) and Target_Distance > 30 and Distance > 30 then return end
+                local Dot = Direction:Dot(Ball_Direction)
 
-				local threshold = ParryThreshold
+                local Distance = Player:DistanceFromCharacter(Ball.Position)
 
-				if Distance <= Spam_Accuracy and Parries > threshold then
-					if getgenv().SpamParryKeypress then
-						VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
-					else
-						Auto_Parry.Parry(Selected_Parry_Type)
-						if Remote then
-							Remote:FireServer()
-						end
-					end
-				end
-			end)
-		else
-			if Connections_Manager['Auto Spam'] then
-				Connections_Manager['Auto Spam']:Disconnect()
-				Connections_Manager['Auto Spam'] = nil
-			end
-		end
-	end
+                if not Ball_Target then
+                    return
+                end
+
+                if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then
+                    return
+                end
+                
+                local Pulsed = Player.Character:GetAttribute('Pulsed')
+
+                if Pulsed then
+                    return
+                end
+
+                if Ball_Target == tostring(Player) and Target_Distance > 30 and Distance > 30 then
+                    return
+                end
+
+                local threshold = ParryThreshold
+
+                if Distance <= Spam_Accuracy and Parries > threshold then
+                    if getgenv().SpamParryKeypress then
+                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
+                    else
+                        Auto_Parry.Parry(Selected_Parry_Type)
+                    end
+                end
+            end)
+        else
+            if Connections_Manager['Auto Spam'] then
+                Connections_Manager['Auto Spam']:Disconnect()
+                Connections_Manager['Auto Spam'] = nil
+            end
+        end
+    end
 })
-						
+
 SpamParry:AddDropdown({
 	Name = "Parry Type",
 	Values = {
@@ -1229,43 +1223,87 @@ SpamParry:AddSlider({
 		ParryThreshold = value
 	end
 })
-						
-if not Connections_Manager then Connections_Manager = {} end
 
-SpamParry:AddToggle({
-    Name = "Animation Fix (Mobile)",
-    Callback = function(value)
-        autoSaveConfig()
-        if value then
-            local lastPlay = 0
-            Connections_Manager['Animation Fix'] = RunService.Heartbeat:Connect(function()
-                if Parries > 0 then
-                    if Grab_Parry and not Grab_Parry.IsPlaying then
-                        local now = tick()
-                        if now - lastPlay > 0.15 then
-                            Grab_Parry:Play()
-                            lastPlay = now
-                        end
-                    elseif not Grab_Parry then
-                        Auto_Parry.Parry_Animation()
-                        lastPlay = tick()
+if not isMobile then
+    SpamParry:AddToggle({
+        Name = "Animation Fix",
+        Callback = function(value)
+	autoSaveConfig()
+            if value then
+                Connections_Manager['Animation Fix'] = RunService.PreSimulation:Connect(function()
+                    local Ball = Auto_Parry.Get_Ball()
+
+                    if not Ball then
+                        return
                     end
-                end
-            end)
-        else
-            if Connections_Manager['Animation Fix'] then
-                Connections_Manager['Animation Fix']:Disconnect()
-                Connections_Manager['Animation Fix'] = nil
-            end
 
-            if Grab_Parry then
-                Grab_Parry:Stop()
-                Grab_Parry = nil
+                    local Zoomies = Ball:FindFirstChild('zoomies')
+
+                    if not Zoomies then
+                        return
+                    end
+
+                    Auto_Parry.Closest_Player()
+
+                    local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue()
+
+                    local Ping_Threshold = math.clamp(Ping / 10, 10, 16)
+
+                    local Ball_Target = Ball:GetAttribute('target')
+
+                    local Ball_Properties = Auto_Parry:Get_Ball_Properties()
+                    local Entity_Properties = Auto_Parry:Get_Entity_Properties()
+
+                    local Spam_Accuracy = Auto_Parry.Spam_Service({
+                        Ball_Properties = Ball_Properties,
+                        Entity_Properties = Entity_Properties,
+                        Ping = Ping_Threshold
+                    })
+
+                    local Target_Position = Closest_Entity.PrimaryPart.Position
+                    local Target_Distance = Player:DistanceFromCharacter(Target_Position)
+
+                    local Direction = (Player.Character.PrimaryPart.Position - Ball.Position).Unit
+                    local Ball_Direction = Zoomies.VectorVelocity.Unit
+
+                    local Dot = Direction:Dot(Ball_Direction)
+
+                    local Distance = Player:DistanceFromCharacter(Ball.Position)
+
+                    if not Ball_Target then
+                        return
+                    end
+
+                    if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then
+                        return
+                    end
+                    
+                    local Pulsed = Player.Character:GetAttribute('Pulsed')
+
+                    if Pulsed then
+                        return
+                    end
+
+                    if Ball_Target == tostring(Player) and Target_Distance > 30 and Distance > 30 then
+                        return
+                    end
+
+                    local threshold = ParryThreshold
+
+                    if Distance <= Spam_Accuracy and Parries > threshold then
+                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
+                    end
+                end)
+            else
+                if Connections_Manager['Animation Fix'] then
+                    Connections_Manager['Animation Fix']:Disconnect()
+                    Connections_Manager['Animation Fix'] = nil
+                end
             end
         end
-    end
-})
-						
+    })
+end
+
 SpamParry:AddToggle({
     Name = "Keypress",
     Callback = function(value)
@@ -1280,29 +1318,25 @@ local ManualSpam = Blatant:AddSection({
 });
 
 ManualSpam:AddToggle({
-    Name = "Manual Spam Parry",
-    Callback = function(value)
-        autoSaveConfig()
+	Name = "Manual Spam Parry",
+	Callback = function(value)
+	autoSaveConfig()
         if value then
             Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
-                local now = tick()
-                if not lastManualSpam then lastManualSpam = 0 end
-                if now - lastManualSpam < 0.005 then return end
-                lastManualSpam = now
-
-                if getgenv().spamui then return end
+    local now = tick()
+    if not lastManualSpam then lastManualSpam = 0 end
+    if now - lastManualSpam < 0.005 then return end
+    lastManualSpam = now
+                if getgenv().spamui then
+                    return
+                end
 
                 if getgenv().ManualSpamKeypress then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
                 else
                     Auto_Parry.Parry(Selected_Parry_Type)
                 end
 
-                task.delay(0.05, function()
-                    if Grab_Parry then
-                        Grab_Parry:AdjustSpeed(0)
-                    end
-                end)
             end)
         else
             if Connections_Manager['Manual Spam'] then
