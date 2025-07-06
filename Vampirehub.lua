@@ -4136,7 +4136,7 @@ do
                 Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastAutoSpam then lastAutoSpam = 0 end
-    if now - lastAutoSpam < 0.0167 then return end
+    if now - lastAutoSpam < 0.05 then return end
     lastAutoSpam = now
                 local Ball = Auto_Parry.Get_Ball()
 
@@ -4373,7 +4373,7 @@ Last_Parry = tick()
                 Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.0167 then return end
+    if now - lastManualSpam < 0.05 then return end
     lastManualSpam = now
                 if getgenv().spamui then
                     return
