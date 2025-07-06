@@ -393,7 +393,7 @@ function Library.SendNotification(settings)
     local InnerFrame = Instance.new("Frame")
     InnerFrame.Size = UDim2.new(1, 0, 0, 60)  -- Start with an initial height, width will adapt
     InnerFrame.Position = UDim2.new(0, 0, 0, 0)  -- Positioned inside the outer notification frame
-    InnerFrame.BackgroundColor3 = Color3.fromRGB(210, 180, 255)
+    InnerFrame.BackgroundColor3 = Color3.fromRGB(32, 38, 51)
     InnerFrame.BackgroundTransparency = 0.1
     InnerFrame.BorderSizePixel = 0
     InnerFrame.Name = "InnerFrame"
@@ -408,7 +408,7 @@ function Library.SendNotification(settings)
     -- Title Label (with automatic size support)
     local Title = Instance.new("TextLabel")
     Title.Text = settings.title or "Notification Title"
-    Title.TextColor3 = Color3.fromRGB(210, 180, 255)
+    Title.TextColor3 = Color3.fromRGB(210, 210, 210)
     Title.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
     Title.TextSize = 14
     Title.Size = UDim2.new(1, -10, 0, 20)  -- Width is 1 (100% of parent width), height is fixed initially
@@ -423,7 +423,7 @@ function Library.SendNotification(settings)
     -- Body Text (with automatic size support)
     local Body = Instance.new("TextLabel")
     Body.Text = settings.text or "This is the body of the notification."
-    Body.TextColor3 = Color3.fromRGB(210, 180, 255)
+    Body.TextColor3 = Color3.fromRGB(180, 180, 180)
     Body.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal)
     Body.TextSize = 12
     Body.Size = UDim2.new(1, -10, 0, 30)  -- Width is 1 (100% of parent width), height is fixed initially
@@ -530,11 +530,11 @@ function Library:create_ui()
     
     local Container = Instance.new('Frame')
 Container.ClipsDescendants = true
-Container.BorderColor3 = Color3.fromRGB(210, 180, 255) -- cinza escuro neutro
+Container.BorderColor3 = Color3.fromRGB(80, 80, 80) -- cinza escuro neutro
 Container.AnchorPoint = Vector2.new(0.5, 0.5)
 Container.Name = 'Container'
 Container.BackgroundTransparency = 0.2 -- transparência leve
-Container.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- base escura para o gradiente
+Container.BackgroundColor3 = Color3.fromRGB(0, 240, 255) -- base escura para o gradiente
 Container.Position = UDim2.new(0.5, 0, 0.5, 0)
 Container.Size = UDim2.new(0, 0, 0, 0)
 Container.Active = true
@@ -6728,12 +6728,12 @@ qolPlayerNameVisibility()
     SkinChanger:change_state(false)
 
     SkinChanger:create_paragraph({
-        title = "âš ï¸EVERYONE CAN SEE ANIMATIONS",
+        title = "EVERYONE CAN SEE ANIMATIONS",
         text = "IF YOU USE SKIN CHANGER BACKSWORD YOU MUST EQUIP AN ACTUAL BACKSWORD"
     })
 
     local skinchangertextbox = SkinChanger:create_textbox({
-        title = "ï¿¬ Skin Name (Case Sensitive) ï¿¬",
+        title = "Skin Name (Case Sensitive)",
         placeholder = "Enter Sword Skin Name... ",
         flag = "SkinChangerTextbox",
         callback = function(text)
