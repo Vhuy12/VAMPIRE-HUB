@@ -284,7 +284,7 @@ local Config = setmetatable({
     save = function(self: any, file_name: any, config: any)
         local success_save, result = pcall(function()
             local flags = HttpService:JSONEncode(config)
-            writefile('Riser/'..file_name..'.json', flags)
+            writefile('Vampire/'..file_name..'.json', flags)
         end)
     
         if not success_save then
@@ -293,7 +293,7 @@ local Config = setmetatable({
     end,
     load = function(self: any, file_name: any, config: any)
         local success_load, result = pcall(function()
-            if not isfile('Riser/'..file_name..'.json') then
+            if not isfile('Vampire/'..file_name..'.json') then
                 self:save(file_name, config)
         
                 return
