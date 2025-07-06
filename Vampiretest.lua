@@ -15,6 +15,15 @@ local Debris = cloneref(game:GetService('Debris'))
 local Players = game:GetService('Players')
 local Player = Players.LocalPlayer
 
+function RestoreMovement()
+    local char = Player.Character
+    if not char then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+        hum.WalkSpeed = 36
+    end
+end
 
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
