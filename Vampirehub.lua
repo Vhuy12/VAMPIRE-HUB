@@ -48,10 +48,10 @@ local CoreGui = cloneref(game:GetService('CoreGui'))
 local Debris = cloneref(game:GetService('Debris'))
 
 local mouse = Players.LocalPlayer:GetMouse()
-local old_Riser = CoreGui:FindFirstChild('Riser')
+local old_Vampire = CoreGui:FindFirstChild('Vampire')
 
-if old_Riser then
-    Debris:AddItem(old_Riser, 0)
+if old_Vampire then
+    Debris:AddItem(old_Vampire, 0)
 end
 
 if not isfolder("Vampire") then
@@ -299,7 +299,7 @@ local Config = setmetatable({
                 return
             end
         
-            local flags = readfile('Riser/'..file_name..'.json')
+            local flags = readfile('Vampire/'..file_name..'.json')
         
             if not flags then
                 self:save(file_name, config)
