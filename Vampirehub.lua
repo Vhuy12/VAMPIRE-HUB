@@ -516,17 +516,17 @@ end
 
 
 function Library:create_ui()
-    local old_Riser = CoreGui:FindFirstChild('Riser')
+    local old_Vampire = CoreGui:FindFirstChild('Vampire')
 
     if old_Riser then
-        Debris:AddItem(old_Riser, 0)
+        Debris:AddItem(old_Vampire, 0)
     end
 
-    local Riser = Instance.new('ScreenGui')
-    Riser.ResetOnSpawn = false
-    Riser.Name = 'Riser'
-    Riser.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    Riser.Parent = CoreGui
+    local Vampire = Instance.new('ScreenGui')
+    Vampire.ResetOnSpawn = false
+    Vampire.Name = 'Vampire'
+    Vampire.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    Vampire.Parent = CoreGui
     
     local Container = Instance.new('Frame')
 Container.ClipsDescendants = true
@@ -539,7 +539,7 @@ Container.Position = UDim2.new(0.5, 0, 0.5, 0)
 Container.Size = UDim2.new(0, 0, 0, 0)
 Container.Active = true
 Container.BorderSizePixel = 0
-Container.Parent = Riser
+Container.Parent = Vampire
 
 local UICorner = Instance.new('UICorner')
 UICorner.CornerRadius = UDim.new(0, 10)
@@ -584,8 +584,8 @@ local ClientName = Instance.new('TextLabel')
 ClientName.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
 ClientName.TextColor3 = Color3.fromRGB(240, 240, 240) -- branco suave
 ClientName.TextTransparency = 0.05
-ClientName.Text = 'Vampire Paid'
-ClientName.Name = 'Vampire Paid'
+ClientName.Text = 'Vampire free'
+ClientName.Name = 'Vampire free'
 ClientName.Size = UDim2.new(0, 31, 0, 13)
 ClientName.AnchorPoint = Vector2.new(0, 0.5)
 ClientName.Position = UDim2.new(0.056, 0, 0.055, 0)
