@@ -1,5 +1,5 @@
 function loadMainScript()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Vhuy12/VAMPIRE-HUB/refs/heads/main/Vampirehub.lua"))()
+    loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/9b2141f7f19f5004"))()
 end
 
 local TweenService = game:GetService("TweenService")
@@ -98,7 +98,7 @@ getKeyMain.MouseButton1Click:Connect(function()
 	setclipboard("https://discord.gg/ppSY9wgf")
 end)
 
-local validKey = "riser-on-top"
+local validKey = "VampireOnTop"
 submit.MouseButton1Click:Connect(function()
 	if textbox.Text == validKey then
 		for _, child in pairs(frame:GetDescendants()) do
