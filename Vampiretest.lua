@@ -871,7 +871,7 @@ local module = Blatant:AddSection({
 	Name = "Auto Parry",
 	Position = "left",
 });
-
+						
 module:AddToggle({
 	Name = "Auto Parry",
 	Callback = function(value)
