@@ -1,10 +1,6 @@
 local ContextActionService = game:GetService('ContextActionService')
 local Phantom = false
 
-local function BlockMovement(actionName, inputState, inputObject)
-    return Enum.ContextActionResult.Sink
-end
-
 local UserInputService = cloneref(game:GetService('UserInputService'))
 local ContentProvider = cloneref(game:GetService('ContentProvider'))
 local TweenService = cloneref(game:GetService('TweenService'))
@@ -35,8 +31,8 @@ local Grab_Parry = nil
 
 local Remotes = {}
 local Parry_Key = nil
-local Speed_Divisor_Multiplier = 1.1
-local LobbyAP_Speed_Divisor_Multiplier = 1.1
+local Speed_Divisor_Multiplier = 1.5
+local LobbyAP_Speed_Divisor_Multiplier = 1.5
 local firstParryFired = false
 local ParryThreshold = 2.5
 local firstParryType = 'F_Key'
