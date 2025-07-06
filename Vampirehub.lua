@@ -534,7 +534,7 @@ Container.BorderColor3 = Color3.fromRGB(80, 80, 80) -- cinza escuro neutro
 Container.AnchorPoint = Vector2.new(0.5, 0.5)
 Container.Name = 'Container'
 Container.BackgroundTransparency = 0.2 -- transparência leve
-Container.BackgroundColor3 = Color3.fromRGB(0, 240, 255) -- base escura para o gradiente
+Container.BackgroundColor3 = Color3.fromRGB(162, 191, 254)
 Container.Position = UDim2.new(0.5, 0, 0.5, 0)
 Container.Size = UDim2.new(0, 0, 0, 0)
 Container.Active = true
@@ -6728,12 +6728,12 @@ qolPlayerNameVisibility()
     SkinChanger:change_state(false)
 
     SkinChanger:create_paragraph({
-        title = "EVERYONE CAN SEE ANIMATIONS",
+        title = "âš ï¸EVERYONE CAN SEE ANIMATIONS",
         text = "IF YOU USE SKIN CHANGER BACKSWORD YOU MUST EQUIP AN ACTUAL BACKSWORD"
     })
 
     local skinchangertextbox = SkinChanger:create_textbox({
-        title = "Skin Name (Case Sensitive)",
+        title = "ï¿¬ Skin Name (Case Sensitive) ï¿¬",
         placeholder = "Enter Sword Skin Name... ",
         flag = "SkinChangerTextbox",
         callback = function(text)
