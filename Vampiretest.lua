@@ -2663,3 +2663,17 @@ BallStatsSection:AddToggle({
 		end
 	end
 })
+
+task.spawn(function()
+    while true do
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChild("Humanoid")
+            if hum then
+                hum.PlatformStand = false
+                hum.WalkSpeed = 36 -- tốc độ mặc định
+            end
+        end
+        task.wait(0.2)
+    end
+end)
