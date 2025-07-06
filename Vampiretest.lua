@@ -1,6 +1,16 @@
 local ContextActionService = game:GetService('ContextActionService')
-ContextActionService.BindAction = function() end
-ContextActionService.UnbindAction = function() end
+local originalBindAction = ContextActionService.BindAction
+local originalUnbindAction = ContextActionService.UnbindAction
+
+ContextActionService.BindAction = function(name, ...)
+    if name == "BlockPlayerMovement" then return end
+    return originalBindAction(name, ...)
+end
+
+ContextActionService.UnbindAction = function(name, ...)
+    if name == "BlockPlayerMovement" then return end
+    return originalUnbindAction(name, ...)
+end
 local Phantom = false
 
 local function BlockMovement(actionName, inputState, inputObject)
