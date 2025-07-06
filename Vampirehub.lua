@@ -518,7 +518,7 @@ end
 function Library:create_ui()
     local old_Vampire = CoreGui:FindFirstChild('Vampire')
 
-    if old_Riser then
+    if old_Vampire then
         Debris:AddItem(old_Vampire, 0)
     end
 
@@ -668,7 +668,7 @@ Minimize.Parent = Handler
 local UIScale = Instance.new('UIScale')
 UIScale.Parent = Container
     
-    self._ui = Riser
+    self._ui = Vampire
 
     local function on_drag(input: InputObject, process: boolean)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
@@ -725,7 +725,7 @@ UIScale.Parent = Container
     end;
 
     function self:UIVisiblity()
-        Riser.Enabled = not Riser.Enabled;
+        Vampire.Enabled = not Vampire.Enabled;
     end;
 
     function self:change_visiblity(state: boolean)
@@ -744,7 +744,7 @@ UIScale.Parent = Container
     function self:load()
         local content = {}
     
-        for _, object in Riser:GetDescendants() do
+        for _, object in Vampire:GetDescendants() do
             if not object:IsA('ImageLabel') then
                 continue
             end
@@ -1369,7 +1369,7 @@ Options.Parent = Module
                     Body.Text = settings.text or "Skibidi"
                 else
                     Body.RichText = true
-                    Body.Text = settings.richtext or "<font color='rgb(255,0,0)'>Riser</font> user"
+                    Body.Text = settings.richtext or "<font color='rgb(255,0,0)'>Vampire</font> user"
                 end
                 
                 Body.Size = UDim2.new(1, -10, 0, 20)
@@ -1439,7 +1439,7 @@ Options.Parent = Module
                     Body.Text = settings.text or "Skibidi" -- Default text
                 else
                     Body.RichText = true
-                    Body.Text = settings.richtext or "<font color='rgb(255,0,0)'>Riser</font> user" -- Default rich text
+                    Body.Text = settings.richtext or "<font color='rgb(255,0,0)'>Vampire</font> user" -- Default rich text
                 end
             
                 Body.Size = UDim2.new(1, -10, 1, 0)
@@ -1470,7 +1470,7 @@ Options.Parent = Module
                         Body.Text = new_settings.text or "Skibidi" -- Default text
                     else
                         Body.RichText = true
-                        Body.Text = new_settings.richtext or "<font color='rgb(255,0,0)'>Riser</font> user" -- Default rich text
+                        Body.Text = new_settings.richtext or "<font color='rgb(255,0,0)'>Vampire</font> user" -- Default rich text
                     end
                 end;
             
@@ -7663,17 +7663,17 @@ local BallStats = misc:create_module({
                 local Announcer = Player.PlayerGui:WaitForChild("announcer")
                 local Winner = Announcer:FindFirstChild("Winner")
                 if Winner then
-                    Winner.Text = Library._config._flags["announcer_text"] or "discord.gg/Riser"
+                    Winner.Text = Library._config._flags["announcer_text"] or "discord.gg/Vampire"
                 end
                 Announcer.ChildAdded:Connect(function(Value)
                     if Value.Name == "Winner" then
                         Value.Changed:Connect(function(Property)
                             if Property == "Text" and Library._config._flags["Custom_Announcer"] then
-                                Value.Text = Library._config._flags["announcer_text"] or "discord.gg/Riser"
+                                Value.Text = Library._config._flags["announcer_text"] or "discord.gg/Vampire"
                             end
                         end)
                         if Library._config._flags["Custom_Announcer"] then
-                            Value.Text = Library._config._flags["announcer_text"] or "discord.gg/Riser"
+                            Value.Text = Library._config._flags["announcer_text"] or "discord.gg/Vampire"
                         end
                     end
                 end)
