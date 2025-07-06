@@ -31,7 +31,7 @@ gradient.Color = ColorSequence.new{
 gradient.Rotation = 90
 
 local title = Instance.new("TextLabel", frame)
-title.Text = "🔐 Get Key"
+title.Text = "Vampire get key"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.TextColor3 = Color3.fromRGB(235, 235, 255)
@@ -61,7 +61,7 @@ buttonRow.BackgroundTransparency = 1
 local getKeyMain = Instance.new("TextButton", buttonRow)
 getKeyMain.Size = UDim2.new(0.48, 0, 1, 0)
 getKeyMain.Position = UDim2.new(0, 0, 0, 0)
-getKeyMain.Text = "🌐 Get Key"
+getKeyMain.Text = "Get Key"
 getKeyMain.TextColor3 = Color3.fromRGB(255, 255, 255)
 getKeyMain.BackgroundColor3 = Color3.fromRGB(100, 80, 255)
 getKeyMain.Font = Enum.Font.GothamBold
@@ -95,7 +95,7 @@ hover(submit, Color3.fromRGB(120, 100, 255), Color3.fromRGB(140, 120, 255))
 hover(getKeyMain, Color3.fromRGB(100, 80, 255), Color3.fromRGB(130, 110, 255))
 
 getKeyMain.MouseButton1Click:Connect(function()
-	setclipboard("https://your-key-system.com")
+	setclipboard("https://discord.gg/ppSY9wgf")
 end)
 
 local validKey = "riser-on-top"
