@@ -950,9 +950,6 @@ module:AddToggle({
                     Ball:GetAttributeChangedSignal('target'):Once(function()
                         --Controls:Enable()
 
-                        ContextActionService:UnbindAction('BlockPlayerMovement')
-                        Phantom = false
-
                         Player.Character.Humanoid:MoveTo(Player.Character.HumanoidRootPart.Position)
                         Player.Character.Humanoid.WalkSpeed = 10
 
