@@ -1,5 +1,4 @@
-local function runMainScript()
-	
+
 getgenv().GG = {
     Language = {
         CheckboxEnabled = "Enabled",
@@ -7760,6 +7759,7 @@ workspace.Balls.ChildRemoved:Connect(function(Value)
         Connections_Manager['Target Change'] = nil
         end
 end)
-        main:load()
-end
-loadstring(game:HttpGet("https://pastebin.com/raw/1RWGJmhJ", true))()(runMainScript)
+
+						
+						
+main:load()
