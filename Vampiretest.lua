@@ -933,7 +933,7 @@ module:AddToggle({
                     if Phantom and Player.Character:FindFirstChild('ParryHighlight') and getgenv().PhantomV2Detection then
                     --Controls:Disable()
 
-                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.UserInputType.Touch)
+                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D)
 
                     Player.Character.Humanoid.WalkSpeed = 36
                     Player.Character.Humanoid:MoveTo(Ball.Position)
