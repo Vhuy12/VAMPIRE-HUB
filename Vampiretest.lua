@@ -1,6 +1,10 @@
 local ContextActionService = game:GetService('ContextActionService')
 local Phantom = false
 
+local function BlockMovement(actionName, inputState, inputObject)
+    return Enum.ContextActionResult.Sink
+end
+
 local UserInputService = cloneref(game:GetService('UserInputService'))
 local ContentProvider = cloneref(game:GetService('ContentProvider'))
 local TweenService = cloneref(game:GetService('TweenService'))
@@ -252,7 +256,7 @@ local Closest_Entity = nil
 function Auto_Parry.Closest_Player()
     local Max_Distance = math.huge
     local Found_Entity = nil
-
+    
     for _, Entity in pairs(workspace.Alive:GetChildren()) do
         if tostring(Entity) ~= tostring(Player) then
             if Entity.PrimaryPart then  -- Check if PrimaryPart exists
@@ -264,7 +268,7 @@ function Auto_Parry.Closest_Player()
             end
         end
     end
-
+    
     Closest_Entity = Found_Entity
     return Found_Entity
 end
@@ -292,40 +296,40 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEna
 
 function Auto_Parry.Parry_Data(Parry_Type)
     Auto_Parry.Closest_Player()
-
+    
     local Events = {}
     local Camera = workspace.CurrentCamera
     local Vector2_Mouse_Location
-
+    
     if Last_Input == Enum.UserInputType.MouseButton1 or (Enum.UserInputType.MouseButton2 or Last_Input == Enum.UserInputType.Keyboard) then
         local Mouse_Location = UserInputService:GetMouseLocation()
         Vector2_Mouse_Location = {Mouse_Location.X, Mouse_Location.Y}
     else
         Vector2_Mouse_Location = {Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2}
     end
-
+    
     if isMobile then
         Vector2_Mouse_Location = {Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2}
     end
-
+    
     local Players_Screen_Positions = {}
     for _, v in pairs(workspace.Alive:GetChildren()) do
         if v ~= Player.Character then
             local worldPos = v.PrimaryPart.Position
             local screenPos, isOnScreen = Camera:WorldToScreenPoint(worldPos)
-
+            
             if isOnScreen then
                 Players_Screen_Positions[v] = Vector2.new(screenPos.X, screenPos.Y)
             end
-
+            
             Events[tostring(v)] = screenPos
         end
     end
-
+    
     if Parry_Type == 'Camera' then
         return {0, Camera.CFrame, Events, Vector2_Mouse_Location}
     end
-
+    
     if Parry_Type == 'Backwards' then
         local Backwards_Direction = Camera.CFrame.LookVector * -10000
         Backwards_Direction = Vector3.new(Backwards_Direction.X, 0, Backwards_Direction.Z)
@@ -336,16 +340,16 @@ function Auto_Parry.Parry_Data(Parry_Type)
         local Aimed_Player = nil
         local Closest_Distance = math.huge
         local Mouse_Vector = Vector2.new(Vector2_Mouse_Location[1], Vector2_Mouse_Location[2])
-
+        
         for _, v in pairs(workspace.Alive:GetChildren()) do
             if v ~= Player.Character then
                 local worldPos = v.PrimaryPart.Position
                 local screenPos, isOnScreen = Camera:WorldToScreenPoint(worldPos)
-
+                
                 if isOnScreen then
                     local playerScreenPos = Vector2.new(screenPos.X, screenPos.Y)
                     local distance = (Mouse_Vector - playerScreenPos).Magnitude
-
+                    
                     if distance < Closest_Distance then
                         Closest_Distance = distance
                         Aimed_Player = v
@@ -353,28 +357,28 @@ function Auto_Parry.Parry_Data(Parry_Type)
                 end
             end
         end
-
+        
         if Aimed_Player then
             return {0, CFrame.new(Player.Character.PrimaryPart.Position, Aimed_Player.PrimaryPart.Position), Events, Vector2_Mouse_Location}
         else
             return {0, CFrame.new(Player.Character.PrimaryPart.Position, Closest_Entity.PrimaryPart.Position), Events, Vector2_Mouse_Location}
         end
     end
-
+    
     if Parry_Type == 'Random' then
         return {0, CFrame.new(Camera.CFrame.Position, Vector3.new(math.random(-4000, 4000), math.random(-4000, 4000), math.random(-4000, 4000))), Events, Vector2_Mouse_Location}
     end
-
+    
     if Parry_Type == 'High' then
         local High_Direction = Camera.CFrame.UpVector * 10000
         return {0, CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + High_Direction), Events, Vector2_Mouse_Location}
     end
-
+    
     if Parry_Type == 'Left' then
         local Left_Direction = Camera.CFrame.RightVector * 10000
         return {0, CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position - Left_Direction), Events, Vector2_Mouse_Location}
     end
-
+    
     if Parry_Type == 'Right' then
         local Right_Direction = Camera.CFrame.RightVector * 10000
         return {0, CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + Right_Direction), Events, Vector2_Mouse_Location}
@@ -401,7 +405,7 @@ function Auto_Parry.Parry_Data(Parry_Type)
             return {0, Camera.CFrame, Events, { Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2 }}
         end
     end
-
+    
     return Parry_Type
 end
 
@@ -652,42 +656,42 @@ RunTime.ChildAdded:Connect(function(Object)
                 if Character and Weld.Part1 == Character.HumanoidRootPart then
                     CurrentBall = GetBall()
                     Weld:Destroy()
-
+    
                     if CurrentBall then
                         local FocusConnection
                         FocusConnection = RunService.RenderStepped:Connect(function()
                             local Highlighted = CurrentBall:GetAttribute("highlighted")
-
+    
                             if Highlighted == true then
                                 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 36
-
+    
                                 local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
                                 if HumanoidRootPart then
                                     local PlayerPosition = HumanoidRootPart.Position
                                     local BallPosition = CurrentBall.Position
                                     local PlayerToBall = (BallPosition - PlayerPosition).Unit
-
+    
                                     game.Players.LocalPlayer.Character.Humanoid:Move(PlayerToBall, false)
                                 end
-
+    
                             elseif Highlighted == false then
                                 FocusConnection:Disconnect()
-
+    
                                 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 10
                                 game.Players.LocalPlayer.Character.Humanoid:Move(Vector3.new(0, 0, 0), false)
-
+    
                                 task.delay(3, function()
                                     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 36
                                 end)
-
+    
                                 CurrentBall = nil
                             end
                         end)
-
+    
                         task.delay(3, function()
                             if FocusConnection and FocusConnection.Connected then
                                 FocusConnection:Disconnect()
-
+    
                                 game.Players.LocalPlayer.Character.Humanoid:Move(Vector3.new(0, 0, 0), false)
                                 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 36
                                 CurrentBall = nil
@@ -744,32 +748,32 @@ if not AirflowLib then return end
 local Window = AirflowLib:Init({
         Name = "Vampire test version",
         Keybind = "LeftControl",
-        Logo = "http://www.roblox.com/asset/?id=97624744584100",                                                
+	Logo = "http://www.roblox.com/asset/?id=97624744584100",						
 })
 
 local Credits = Window:DrawTab({
-        Name = "Credits",
-        Icon = "home"
+	Name = "Credits",
+	Icon = "home"
 })
-
+						
 local Blatant = Window:DrawTab({
-        Name = "Blatant",
-        Icon = "sword"
+	Name = "Blatant",
+	Icon = "sword"
 })
 
 local player = Window:DrawTab({
-        Name = "Player",
-        Icon = "user"
+	Name = "Player",
+	Icon = "user"
 })
 
 local world = Window:DrawTab({
-        Name = "World",
-        Icon = "globe"
+	Name = "World",
+	Icon = "globe"
 })
 
 local misc = Window:DrawTab({
-        Name = "Misc",
-        Icon = "layers"
+	Name = "Misc",
+	Icon = "layers"
 })
 
 local HttpService = game:GetService("HttpService")
@@ -777,240 +781,276 @@ local configFolder = "VampireHubConfigs"
 local configPath = configFolder.."/Vampire.json"
 
 if not isfolder(configFolder) then
-        makefolder(configFolder)
+	makefolder(configFolder)
 end
 
 local function safeReadFile(path)
-        local success, data = pcall(readfile, path)
-        if success then
-                return data
-        else
-                return nil
-        end
+	local success, data = pcall(readfile, path)
+	if success then
+		return data
+	else
+		return nil
+	end
 end
 
 local function safeWriteFile(path, data)
-        local success, err = pcall(writefile, path, data)
+	local success, err = pcall(writefile, path, data)
 end
 
 local function getConfigTable()
-        return {
-                AutoParryKeypress = getgenv().AutoParryKeypress,
-                SpamParryKeypress = getgenv().SpamParryKeypress,
-                ManualSpamKeypress = getgenv().ManualSpamKeypress,
-                TriggerbotKeypress = getgenv().TriggerbotKeypress,
-                RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled,
-                InfinityDetection = getgenv().InfinityDetection,
-                Selected_Parry_Type = Selected_Parry_Type,
-                ParryThreshold = ParryThreshold,
-                CameraFOV = getgenv().CameraFOV,
-                Spinbot = getgenv().Spinbot,
-                SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
-        }
+	return {
+		AutoParryKeypress = getgenv().AutoParryKeypress,
+		SpamParryKeypress = getgenv().SpamParryKeypress,
+		ManualSpamKeypress = getgenv().ManualSpamKeypress,
+		TriggerbotKeypress = getgenv().TriggerbotKeypress,
+		RandomParryAccuracyEnabled = getgenv().RandomParryAccuracyEnabled,
+		InfinityDetection = getgenv().InfinityDetection,
+		Selected_Parry_Type = Selected_Parry_Type,
+		ParryThreshold = ParryThreshold,
+		CameraFOV = getgenv().CameraFOV,
+		Spinbot = getgenv().Spinbot,
+		SpinSpeed = getgenv().spinSpeed and math.deg(getgenv().spinSpeed) or 1
+	}
 end
 
 local function setConfigTable(data)
-        getgenv().AutoParryKeypress = data.AutoParryKeypress
-        getgenv().SpamParryKeypress = data.SpamParryKeypress
-        getgenv().ManualSpamKeypress = data.ManualSpamKeypress
-        getgenv().TriggerbotKeypress = data.TriggerbotKeypress
-        getgenv().RandomParryAccuracyEnabled = data.RandomParryAccuracyEnabled
-        getgenv().InfinityDetection = data.InfinityDetection
-        Selected_Parry_Type = data.Selected_Parry_Type
-        ParryThreshold = data.ParryThreshold
-        getgenv().CameraFOV = data.CameraFOV
-        getgenv().Spinbot = data.Spinbot
-        getgenv().spinSpeed = math.rad(data.SpinSpeed)
+	getgenv().AutoParryKeypress = data.AutoParryKeypress
+	getgenv().SpamParryKeypress = data.SpamParryKeypress
+	getgenv().ManualSpamKeypress = data.ManualSpamKeypress
+	getgenv().TriggerbotKeypress = data.TriggerbotKeypress
+	getgenv().RandomParryAccuracyEnabled = data.RandomParryAccuracyEnabled
+	getgenv().InfinityDetection = data.InfinityDetection
+	Selected_Parry_Type = data.Selected_Parry_Type
+	ParryThreshold = data.ParryThreshold
+	getgenv().CameraFOV = data.CameraFOV
+	getgenv().Spinbot = data.Spinbot
+	getgenv().spinSpeed = math.rad(data.SpinSpeed)
 end
 
 function autoSaveConfig()
-        local config = getConfigTable()
-        safeWriteFile(configPath, HttpService:JSONEncode(config))
+	local config = getConfigTable()
+	safeWriteFile(configPath, HttpService:JSONEncode(config))
 end
 
 function autoLoadConfig()
-        if not isfile(configPath) then return end
-        local data = safeReadFile(configPath)
-        if not data then return end
-        local success, decoded = pcall(HttpService.JSONDecode, HttpService, data)
-        if success and type(decoded) == "table" then
-                setConfigTable(decoded)
-        end
+	if not isfile(configPath) then return end
+	local data = safeReadFile(configPath)
+	if not data then return end
+	local success, decoded = pcall(HttpService.JSONDecode, HttpService, data)
+	if success and type(decoded) == "table" then
+		setConfigTable(decoded)
+	end
 end
 
 autoLoadConfig()
 
 local section = Credits:AddSection({
-        Name = "Vampire Hub",
-        Position = "mid"
+	Name = "Vampire Hub",
+	Position = "full"
 })
 
 section:AddParagraph({
-        Title = "Created by Kurayami",
-        Content = "Script developed by Kurayami and Discord: Vampire Hub"
+	Title = "Created by Kurayami",
+	Content = "Script developed by Kurayami and Discord: Vampire Hub"
 })
 
 section:AddButton({
-        Name = "Copy Discord Link",
-        Callback = function()
-                setclipboard("https://discord.gg/xqbpKmSs")
-                notify("Credits", "Discord link copied!")
-        end
+	Name = "Copy Discord Link",
+	Callback = function()
+		setclipboard("https://discord.gg/xqbpKmSs")
+		notify("Credits", "Discord link copied!")
+	end
 })
 
 section:AddParagraph({
-        Title = "About Vampire hub",
-        Content = "Vampire hub is a script Blade ball powerful"
+	Title = "About Vampire hub",
+	Content = "Vampire hub is a script Blade ball powerful"
 })
 
 local module = Blatant:AddSection({
-        Name = "Auto Parry",
-        Position = "left",
+	Name = "Auto Parry",
+	Position = "left",
 });
 
 module:AddToggle({
-        Name = "Auto Parry",
-        Callback = function(value)
+	Name = "Auto Parry",
+	Callback = function(value)
+	autoSaveConfig()
         if value then
-             Connections_Manager['Auto Parry'] = RunService.PreSimulation:Connect(function()
-                    local One_Ball = Auto_Parry.Get_Ball()
-                    local Balls = Auto_Parry.Get_Balls()
+            Connections_Manager['Auto Parry'] = RunService.PreSimulation:Connect(function()
+                local One_Ball = Auto_Parry.Get_Ball()
+                local Balls = Auto_Parry.Get_Balls()
 
-                    for _, Ball in pairs(Balls) do
+                for _, Ball in pairs(Balls) do
 
-                        if not Ball then
-                            return
-                        end
-
-                        local Zoomies = Ball:FindFirstChild('zoomies')
-                        if not Zoomies then
-                            return
-                        end
-
-                        Ball:GetAttributeChangedSignal('target'):Once(function()
-                            Parried = false
-                        end)
-
-                        if Parried then
-                            return
-                        end
-
-                        local Ball_Target = Ball:GetAttribute('target')
-                        local One_Target = One_Ball:GetAttribute('target')
-
-                        local Velocity = Zoomies.VectorVelocity
-
-                        local Distance = (Player.Character.PrimaryPart.Position - Ball.Position).Magnitude
-
-                        local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue() / 10
-
-                        local Ping_Threshold = math.clamp(Ping / 10, 5, 17)
-
-                        local Speed = Velocity.Magnitude
-
-                        local cappedSpeedDiff = math.min(math.max(Speed - 9.5, 0), 650)
-                        local speed_divisor_base = 2.4 + cappedSpeedDiff * 0.002
-
-                        local effectiveMultiplier = Speed_Divisor_Multiplier
-                        if getgenv().RandomParryAccuracyEnabled then
-                            if Speed < 200 then
-                                effectiveMultiplier = 0.7 + (math.random(40, 100) - 1) * (0.35 / 99)
-                            else
-                                effectiveMultiplier = 0.7 + (math.random(1, 100) - 1) * (0.35 / 99)
-                            end
-                        end
-
-                        local speed_divisor = speed_divisor_base * effectiveMultiplier
-                        local Parry_Accuracy = Ping_Threshold + math.max(Speed / speed_divisor, 9.5)
-
-                        local Curved = Auto_Parry.Is_Curved()
-
-                        if Ball:FindFirstChild('AeroDynamicSlashVFX') then
-                            Debris:AddItem(Ball.AeroDynamicSlashVFX, 0)
-                            Tornado_Time = tick()
-                        end
-
-                        if Runtime:FindFirstChild('Tornado') then
-                            if (tick() - Tornado_Time) < (Runtime.Tornado:GetAttribute("TornadoTime") or 1) + 0.314159 then
-                            return
-                            end
-                        end
-
-                        if One_Target == tostring(Player) and Curved then
-                            return
-                        end
-
-                        if Ball:FindFirstChild("ComboCounter") then
-                            return
-                        end
-
-                        local Singularity_Cape = Player.Character.PrimaryPart:FindFirstChild('SingularityCape')
-                        if Singularity_Cape then
-                            return
-                        end 
-
-                        if getgenv().InfinityDetection and Infinity then
-                            return
-                        end
-
-                        if getgenv().DeathSlashDetection and deathshit then
-                            return
-                        end
-
-                        if getgenv().TimeHoleDetection and timehole then
-                            return
-                        end
-
-                        if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
-                            if getgenv().AutoAbility and AutoAbility() then
-                                return
-                            end
-                        end
-
-                        if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
-                            if getgenv().CooldownProtection and cooldownProtection() then
-                                return
-                            end
-
-                            local Parry_Time = os.clock()
-                            local Time_View = Parry_Time - (Last_Parry)
-                            if Time_View > 0.5 then
-                                Auto_Parry.Parry_Animation()
-                            end
-
-                            if getgenv().AutoParryKeypress then
-                                VirtualInputService:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
-                            else
-                                Auto_Parry.Parry(Selected_Parry_Type)
-                            end
-
-                            Last_Parry = Parry_Time
-                            Parried = true
-                        end
-                        local Last_Parrys = tick()
-                        repeat
-                            RunService.PreSimulation:Wait()
-                        until (tick() - Last_Parrys) >= 1 or not Parried
-                        Parried = false
+                    if not Ball then
+                        return
                     end
-                end)
-            else
-                if Connections_Manager['Auto Parry'] then
-                    Connections_Manager['Auto Parry']:Disconnect()
-                    Connections_Manager['Auto Parry'] = nil
+
+                    local Zoomies = Ball:FindFirstChild('zoomies')
+                    if not Zoomies then
+                        return
+                    end
+
+                    Ball:GetAttributeChangedSignal('target'):Once(function()
+                        Parried = false
+                    end)
+
+                    if Parried then
+                        return
+                    end
+
+                    local Ball_Target = Ball:GetAttribute('target')
+                    local One_Target = One_Ball:GetAttribute('target')
+
+                    local Velocity = Zoomies.VectorVelocity
+
+                    local Distance = Player:DistanceFromCharacter(Ball.Position)
+
+                    local Ping = game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue() / 10
+
+                    local Ping_Threshold = math.clamp(Ping / 10, 5, 17)
+
+                    local Speed = Velocity.Magnitude
+
+                    local cappedSpeedDiff = math.min(math.max(Speed - 9.5, 0), 650)
+                    local speed_divisor_base = 2.4 + cappedSpeedDiff * 0.002
+
+                    local effectiveMultiplier = Speed_Divisor_Multiplier
+                    if getgenv().RandomParryAccuracyEnabled then
+                        if Speed < 200 then
+                            effectiveMultiplier = 0.7 + (math.random(40, 100) - 1) * (0.35 / 99)
+                        else
+                            effectiveMultiplier = 0.7 + (math.random(1, 100) - 1) * (0.35 / 99)
+                        end
+                    end
+
+                    local speed_divisor = speed_divisor_base * effectiveMultiplier
+                    local Parry_Accuracy = Ping_Threshold + math.max(Speed / speed_divisor, 9.5)
+
+                    local Curved = Auto_Parry.Is_Curved()
+
+
+                    if Phantom and Player.Character:FindFirstChild('ParryHighlight') and getgenv().PhantomV2Detection then
+                    --Controls:Disable()
+
+                ContextActionService:BindAction('BlockPlayerMovement', BlockMovement, false, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.UserInputType.Touch)
+
+                    Player.Character.Humanoid.WalkSpeed = 36
+                    Player.Character.Humanoid:MoveTo(Ball.Position)
+
+                    task.spawn(function()
+                        repeat
+                            if Player.Character.Humanoid.WalkSpeed ~= 36 then
+                                Player.Character.Humanoid.WalkSpeed = 36
+                            end
+
+                            task.wait()
+
+                        until not Phantom
+                    end)
+
+                    Ball:GetAttributeChangedSignal('target'):Once(function()
+                        --Controls:Enable()
+
+                        ContextActionService:UnbindAction('BlockPlayerMovement')
+                        Phantom = false
+
+                        Player.Character.Humanoid:MoveTo(Player.Character.HumanoidRootPart.Position)
+                        Player.Character.Humanoid.WalkSpeed = 10
+
+                        task.delay(3, function()
+                            Player.Character.Humanoid.WalkSpeed = 36
+                        end)
+                    end)
                 end
+
+                if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy and Phantom then
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+
+                    Parried = true
+                end
+
+                    if Ball:FindFirstChild('AeroDynamicSlashVFX') then
+                        Debris:AddItem(Ball.AeroDynamicSlashVFX, 0)
+                        Tornado_Time = tick()
+                    end
+
+                    if Runtime:FindFirstChild('Tornado') then
+                        if (tick() - Tornado_Time) < (Runtime.Tornado:GetAttribute("TornadoTime") or 1) + 0.314159 then
+                        return
+                        end
+                    end
+
+                    if One_Target == tostring(Player) and Curved then
+                        return
+                    end
+
+                    if Ball:FindFirstChild("ComboCounter") then
+                        return
+                    end
+
+                    local Singularity_Cape = Player.Character.PrimaryPart:FindFirstChild('SingularityCape')
+                    if Singularity_Cape then
+                        return
+                    end 
+
+                    if getgenv().InfinityDetection and Infinity then
+                        return
+                    end
+
+                    if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
+                        if getgenv().AutoAbility and AutoAbility() then
+                            return
+                        end
+                    end
+
+                    if Ball_Target == tostring(Player) and Distance <= Parry_Accuracy then
+                        if getgenv().CooldownProtection and cooldownProtection() then
+                            return
+                        end
+
+                        local Parry_Time = os.clock()
+                        local Time_View = Parry_Time - (Last_Parry)
+                        if Time_View > 0.5 then
+                            Auto_Parry.Parry_Animation()
+                        end
+
+                        if getgenv().AutoParryKeypress then
+                            VirtualInputService:SendKeyEvent(true, Enum.KeyCode.F, false, nil)
+                        else
+                            Auto_Parry.Parry(Selected_Parry_Type)
+                        end
+
+                        Last_Parry = Parry_Time
+                        Parried = true
+                    end
+                    local Last_Parrys = tick()
+                    repeat
+                        RunService.PreSimulation:Wait()
+                    until (tick() - Last_Parrys) >= 1 or not Parried
+                    Parried = false
+                end
+            end)
+        else
+            if Connections_Manager['Auto Parry'] then
+                Connections_Manager['Auto Parry']:Disconnect()
+                Connections_Manager['Auto Parry'] = nil
             end
         end
-    })
+    end
+})
 
 module:AddSlider({
-        Name = "Parry Accuracy",
-        Min = 1,
-        Max = 100,
-        Default = 100, -- optional, defaults to Min if not set
-        Callback = function(value)
-                Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
-        end
+	Name = "Parry Accuracy",
+	Min = 1,
+	Max = 100,
+	Default = 100, -- optional, defaults to Min if not set
+	Callback = function(value)
+	autoSaveConfig()
+		Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
+	end
 })
 
 local parryTypeMap = {
@@ -1025,8 +1065,8 @@ local parryTypeMap = {
 }
 
 module:AddDropdown({
-        Name = "Curve Type",
-        Values = {
+	Name = "Curve Type",
+	Values = {
         "Camera",
         "Random",
         "Backwards",
@@ -1036,49 +1076,49 @@ module:AddDropdown({
         'Right',
         'Random Target'
     },
-        Multi = false,
-        Default = "Camera",
-        Callback = function(value)
+	Multi = false,
+	Default = "Camera",
+	Callback = function(value)
+	autoSaveConfig()
         Selected_Parry_Type = parryTypeMap[value] or value
     end
 })
 
 module:AddToggle({
-        Name = "Random Parry Accuracy",
-        Callback = function(value)
-        getgenv().getgenv().RandomParryAccuracyEnabled = value
+	Name = "Random Parry Accuracy",
+	Callback = function(value)
+	autoSaveConfig()
+        getgenv().RandomParryAccuracyEnabled = value
     end
 })
 
 module:AddToggle({
-        Name = "Infinity Detection",
-        Callback = function(value)
-        getgenv().getgenv().InfinityDetection = value
+	Name = "Infinity Detection",
+	Callback = function(value)
+        autoSaveConfig()
+        getgenv().InfinityDetection = value
     end
 })
 
 module:AddToggle({
-        Name = "Keypress",
-        Callback = function(value)
-        getgenv().getgenv().AutoParryKeypress = value
+	Name = "Keypress",
+	Callback = function(value)
+	autoSaveConfig()
+        getgenv().AutoParryKeypress = value
     end
 })
-						
+
 local SpamParry = Blatant:AddSection({
-        Name = "Auto Spam Parry",
-        Position = "right",
+	Name = "Auto Spam Parry",
+	Position = "right",
 });
 
 SpamParry:AddToggle({
-        Name = "Auto Spam Parry",
-        Callback = function(value)
-        autoSaveConfig()
+	Name = "Auto Spam Parry",
+	Callback = function(value)
+	autoSaveConfig()
         if value then
-            Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
-    local now = tick()
-    if not lastAutoSpam then lastAutoSpam = 0 end
-    if now - lastAutoSpam < 0.0167 then return end
-    lastAutoSpam = now
+            Connections_Manager['Auto Spam'] = RunService.PreSimulation:Connect(function()
                 local Ball = Auto_Parry.Get_Ball()
 
                 if not Ball then
@@ -1125,7 +1165,7 @@ SpamParry:AddToggle({
                 if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then
                     return
                 end
-
+                
                 local Pulsed = Player.Character:GetAttribute('Pulsed')
 
                 if Pulsed then
@@ -1156,35 +1196,35 @@ SpamParry:AddToggle({
 })
 
 SpamParry:AddDropdown({
-        Name = "Parry Type",
-        Values = {
+	Name = "Parry Type",
+	Values = {
         'Legit',
         'Blatant'
     },
-        Multi = false,
-        Default = "Legit",
-        Callback = function(value)
-        autoSaveConfig()
+	Multi = false,
+	Default = "Legit",
+	Callback = function(value)
+	autoSaveConfig()
 
     end
 })
 
 SpamParry:AddSlider({
-        Name = "Parry Threshold",
-        Min = 1,
-        Max = 3,
-        Default = 2.5, -- optional, defaults to Min if not set
-        Callback = function(value)
-        autoSaveConfig()
-                ParryThreshold = value
-        end
+	Name = "Parry Threshold",
+	Min = 1,
+	Max = 3,
+	Default = 2.5, -- optional, defaults to Min if not set
+	Callback = function(value)
+	autoSaveConfig()
+		ParryThreshold = value
+	end
 })
 
 if not isMobile then
     SpamParry:AddToggle({
         Name = "Animation Fix",
         Callback = function(value)
-        autoSaveConfig()
+	autoSaveConfig()
             if value then
                 Connections_Manager['Animation Fix'] = RunService.PreSimulation:Connect(function()
                     local Ball = Auto_Parry.Get_Ball()
@@ -1233,7 +1273,7 @@ if not isMobile then
                     if Target_Distance > Spam_Accuracy or Distance > Spam_Accuracy then
                         return
                     end
-
+                    
                     local Pulsed = Player.Character:GetAttribute('Pulsed')
 
                     if Pulsed then
@@ -1269,20 +1309,16 @@ SpamParry:AddToggle({
 })
 
 local ManualSpam = Blatant:AddSection({
-        Name = "Manual Spam",
-        Position = "left",
+	Name = "Manual Spam",
+	Position = "left",
 });
 
 ManualSpam:AddToggle({
-        Name = "Manual Spam Parry",
-        Callback = function(value)
-        autoSaveConfig()
+	Name = "Manual Spam Parry",
+	Callback = function(value)
+	autoSaveConfig()
         if value then
-            Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
-    local now = tick()
-    if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.0167 then return end
-    lastManualSpam = now
+            Connections_Manager['Manual Spam'] = RunService.PreSimulation:Connect(function()
                 if getgenv().spamui then
                     return
                 end
@@ -1305,9 +1341,9 @@ ManualSpam:AddToggle({
 
 if isMobile then
     ManualSpam:AddToggle({
-        Name = "UI",
-        Callback = function(value)
-        autoSaveConfig()
+	Name = "UI",
+	Callback = function(value)
+	autoSaveConfig()
         getgenv().spamui = value
 
         if value then
@@ -1389,8 +1425,8 @@ ManualSpam:AddToggle({
 })
 
 local Triggerbot = Blatant:AddSection({
-        Name = "Triggerbot",
-        Position = "right",
+	Name = "Triggerbot",
+	Position = "right",
 });
 
 Triggerbot:AddToggle({
@@ -1400,12 +1436,12 @@ Triggerbot:AddToggle({
         if value then
             Connections_Manager['Triggerbot'] = RunService.PreSimulation:Connect(function()
                 local Balls = Auto_Parry.Get_Balls()
-
+    
                 for _, Ball in pairs(Balls) do
                     if not Ball then
                         return
                     end
-
+                    
                     Ball:GetAttributeChangedSignal('target'):Once(function()
                         TriggerbotParried = false
                     end)
@@ -1416,15 +1452,15 @@ Triggerbot:AddToggle({
 
                     local Ball_Target = Ball:GetAttribute('target')
                     local Singularity_Cape = Player.Character.PrimaryPart:FindFirstChild('SingularityCape')
-
+        
                     if Singularity_Cape then 
                         return
                     end 
-
+                
                     if getgenv().TriggerbotInfinityDetection and Infinity then
                         return
                     end
-
+    
                     if Ball_Target == tostring(Player) then
                         if getgenv().TriggerbotKeypress then
                             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game) 
@@ -1467,8 +1503,8 @@ Triggerbot:AddToggle({
 })
 
 local LobbyAP = Blatant:AddSection({
-        Name = "Lobby Auto Parry",
-        Position = "left",
+	Name = "Lobby Auto Parry",
+	Position = "left",
 });
 
 LobbyAP:AddToggle({
@@ -1536,25 +1572,25 @@ LobbyAP:AddToggle({
 })
 
 module:AddToggle({
-            Name = "Phantom Detection",
-        Min = 1,
-        Max = 100,
-        Default = 100,
-        Callback = function(value)
-        autoSaveConfig()
+    	Name = "Phantom Detection",
+	Min = 1,
+	Max = 100,
+	Default = 100,
+	Callback = function(value)
+	autoSaveConfig()
         PhantomV2Detection = value
     end
 })
 
 LobbyAP:AddSlider({
-        Name = "Parry Accuracy",
-        Min = 1,
-        Max = 100,
-        Default = 100,
-        Callback = function(value)
-        autoSaveConfig()
-                LobbyAP_Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
-        end
+	Name = "Parry Accuracy",
+	Min = 1,
+	Max = 100,
+	Default = 100,
+	Callback = function(value)
+	autoSaveConfig()
+		LobbyAP_Speed_Divisor_Multiplier = 0.7 + (value - 1) * (0.35 / 99)
+	end
 })
 
 LobbyAP:AddToggle({
@@ -1574,8 +1610,8 @@ LobbyAP:AddToggle({
 })
 
 local Strafe = player:AddSection({
-        Name = "Strafe",
-        Position = "left",
+	Name = "Strafe",
+	Position = "left",
 });
 
 Strafe:AddToggle({
@@ -1594,7 +1630,7 @@ Strafe:AddToggle({
             if character and character:FindFirstChild("Humanoid") then
                 character.Humanoid.WalkSpeed = 36
             end
-
+            
             if Connections_Manager['Strafe'] then
                 Connections_Manager['Strafe']:Disconnect()
                 Connections_Manager['Strafe'] = nil
@@ -1604,19 +1640,19 @@ Strafe:AddToggle({
 })
 
 Strafe:AddSlider({
-        Name = "Speed",
+	Name = "Speed",
     Min = 36,
-        Max = 200,
-        Default = 36,
-        Callback = function(value)
-        autoSaveConfig()
+	Max = 200,
+	Default = 36,
+	Callback = function(value)
+	autoSaveConfig()
         StrafeSpeed = value
     end
 })
 
 local Spinbot = player:AddSection({
-        Name = "Spinbot",
-        Position = "right",
+	Name = "Spinbot",
+	Position = "right",
 });
 
 Spinbot:AddToggle({
@@ -1631,20 +1667,20 @@ Spinbot:AddToggle({
             local RunService = game:GetService("RunService")
             local Client = Players.LocalPlayer
 
-
+            
             local function spinCharacter()
                 while getgenv().spin do
                     RunService.Heartbeat:Wait()
                     local char = Client.Character
                     local funcHRP = char and char:FindFirstChild("HumanoidRootPart")
-
+                    
                     if char and funcHRP then
                         funcHRP.CFrame *= CFrame.Angles(0, getgenv().spinSpeed, 0)
                     end
                 end
             end
 
-
+            
             if not getgenv().spinThread then
                 getgenv().spinThread = coroutine.create(spinCharacter)
                 coroutine.resume(getgenv().spinThread)
@@ -1653,7 +1689,7 @@ Spinbot:AddToggle({
         else
             getgenv().spin = false
 
-
+            
             if getgenv().spinThread then
                 getgenv().spinThread = nil
             end
@@ -1662,19 +1698,19 @@ Spinbot:AddToggle({
 })
 
 Spinbot:AddSlider({
-        Name = "Speed",
+	Name = "Speed",
     Min = 1,
-        Max = 100,
-        Default = 1,
-        Callback = function(value)
-        autoSaveConfig()
+	Max = 100,
+	Default = 1,
+	Callback = function(value)
+	autoSaveConfig()
         getgenv().spinSpeed = math.rad(value)
     end
 })
 
 local FieldOfView = player:AddSection({
-        Name = "Field of View",
-        Position = "left",
+	Name = "Field of View",
+	Position = "left",
 });
 
 FieldOfView:AddToggle({
@@ -1687,7 +1723,7 @@ FieldOfView:AddToggle({
         if value then
             getgenv().CameraFOV = getgenv().CameraFOV or 70
             Camera.FieldOfView = getgenv().CameraFOV
-
+            
             if not getgenv().FOVLoop then
                 getgenv().FOVLoop = game:GetService("RunService").RenderStepped:Connect(function()
                     if getgenv().CameraEnabled then
@@ -1697,7 +1733,7 @@ FieldOfView:AddToggle({
             end
         else
             Camera.FieldOfView = 70
-
+            
             if getgenv().FOVLoop then
                 getgenv().FOVLoop:Disconnect()
                 getgenv().FOVLoop = nil
@@ -1707,12 +1743,12 @@ FieldOfView:AddToggle({
 })
 
 FieldOfView:AddSlider({
-        Name = "FOV",
+	Name = "FOV",
     Min = 50,
-        Max = 150,
-        Default = 70,
-        Callback = function(value)
-        autoSaveConfig()
+	Max = 150,
+	Default = 70,
+	Callback = function(value)
+	autoSaveConfig()
         getgenv().CameraFOV = value
         if getgenv().CameraEnabled then
             game:GetService("Workspace").CurrentCamera.FieldOfView = value
@@ -1721,8 +1757,8 @@ FieldOfView:AddSlider({
 })
 
 local PlayerCosmetics = player:AddSection({
-        Name = "Player Cosmetics",
-        Position = "right",
+	Name = "Player Cosmetics",
+	Position = "right",
 });
 
 _G.PlayerCosmeticsCleanup = {}
@@ -1740,7 +1776,7 @@ PlayerCosmetics:AddToggle({
                 warn("Right leg not found on character")
                 return
             end
-
+            
             for _, child in pairs(rightLeg:GetChildren()) do
                 if child:IsA("SpecialMesh") then
                     child:Destroy()
@@ -1765,7 +1801,7 @@ PlayerCosmetics:AddToggle({
                     else
                         _G.PlayerCosmeticsCleanup.hadNoMesh = true
                     end
-
+                    
                     _G.PlayerCosmeticsCleanup.rightLegChildren = {}
                     for _, child in pairs(rightLeg:GetChildren()) do
                         if child:IsA("SpecialMesh") then
@@ -1782,7 +1818,7 @@ PlayerCosmetics:AddToggle({
                 end
             end
         end
-
+        
         local function restoreRightLeg(char)
             if char then
                 local rightLeg = char:FindFirstChild("RightLeg") or char:FindFirstChild("Right Leg")
@@ -1792,11 +1828,11 @@ PlayerCosmetics:AddToggle({
                             child:Destroy()
                         end
                     end
-
+                    
                     if _G.PlayerCosmeticsCleanup.hadNoMesh then
                         return
                     end
-
+                    
                     for _, childData in ipairs(_G.PlayerCosmeticsCleanup.rightLegChildren) do
                         if childData.ClassName == "SpecialMesh" then
                             local newMesh = Instance.new("SpecialMesh")
@@ -1816,39 +1852,39 @@ PlayerCosmetics:AddToggle({
             getgenv().Config = {
                 Headless = true
             }
-
+            
             if lp.Character then
                 local head = lp.Character:FindFirstChild("Head")
                 if head and getgenv().Config.Headless then
                     _G.PlayerCosmeticsCleanup.headTransparency = head.Transparency
-
+                    
                     local decal = head:FindFirstChildOfClass("Decal")
                     if decal then
                         _G.PlayerCosmeticsCleanup.faceDecalId = decal.Texture
                         _G.PlayerCosmeticsCleanup.faceDecalName = decal.Name
                     end
                 end
-
+                
                 saveRightLegProperties(lp.Character)
                 applyKorblox(lp.Character)
             end
-
+            
             _G.PlayerCosmeticsCleanup.characterAddedConn = lp.CharacterAdded:Connect(function(char)
                 local head = char:FindFirstChild("Head")
                 if head and getgenv().Config.Headless then
                     _G.PlayerCosmeticsCleanup.headTransparency = head.Transparency
-
+                    
                     local decal = head:FindFirstChildOfClass("Decal")
                     if decal then
                         _G.PlayerCosmeticsCleanup.faceDecalId = decal.Texture
                         _G.PlayerCosmeticsCleanup.faceDecalName = decal.Name
                     end
                 end
-
+                
                 saveRightLegProperties(char)
                 applyKorblox(char)
             end)
-
+            
             if getgenv().Config.Headless then
                 headLoop = task.spawn(function()
                     while CosmeticsActive do
@@ -1886,7 +1922,7 @@ PlayerCosmetics:AddToggle({
                 local head = char:FindFirstChild("Head")
                 if head and _G.PlayerCosmeticsCleanup.headTransparency ~= nil then
                     head.Transparency = _G.PlayerCosmeticsCleanup.headTransparency
-
+                    
                     if _G.PlayerCosmeticsCleanup.faceDecalId then
                         local newDecal = head:FindFirstChildOfClass("Decal") or Instance.new("Decal", head)
                         newDecal.Name = _G.PlayerCosmeticsCleanup.faceDecalName or "face"
@@ -1894,7 +1930,7 @@ PlayerCosmetics:AddToggle({
                         newDecal.Face = Enum.NormalId.Front
                     end
                 end
-
+                
                 restoreRightLeg(char)
             end
 
@@ -1904,8 +1940,8 @@ PlayerCosmetics:AddToggle({
 })
 
 local Fly = player:AddSection({
-        Name = "Fly",
-        Position = "left",
+	Name = "Fly",
+	Position = "left",
 });
 
 Fly:AddToggle({
@@ -1917,9 +1953,9 @@ Fly:AddToggle({
             local char = Player.Character or Player.CharacterAdded:Wait()
             local hrp = char:WaitForChild("HumanoidRootPart")
             local humanoid = char:WaitForChild("Humanoid")
-
+            
             getgenv().OriginalStateType = humanoid:GetState()
-
+            
             getgenv().RagdollHandler = humanoid.StateChanged:Connect(function(oldState, newState)
                 if getgenv().FlyEnabled then
                     if newState == Enum.HumanoidStateType.Physics or newState == Enum.HumanoidStateType.Ragdoll then
@@ -1930,54 +1966,54 @@ Fly:AddToggle({
                     end
                 end
             end)
-
+            
             local bodyGyro = Instance.new("BodyGyro")
             bodyGyro.P = 90000
             bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
             bodyGyro.Parent = hrp
-
+            
             local bodyVelocity = Instance.new("BodyVelocity")
             bodyVelocity.Velocity = Vector3.new(0, 0, 0)
             bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
             bodyVelocity.Parent = hrp
-
+            
             humanoid.PlatformStand = true
-
+            
             getgenv().ResetterConnection = RunService.Heartbeat:Connect(function()
                 if not getgenv().FlyEnabled then return end
-
+                
                 if bodyGyro and bodyGyro.Parent then
                     bodyGyro.P = 90000
                     bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
                 end
-
+                
                 if bodyVelocity and bodyVelocity.Parent then
                     bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
                 end
-
+                
                 humanoid.PlatformStand = true
-
+                
                 if not bodyGyro.Parent or not bodyVelocity.Parent then
                     if bodyGyro then bodyGyro:Destroy() end
                     if bodyVelocity then bodyVelocity:Destroy() end
-
+                    
                     bodyGyro = Instance.new("BodyGyro")
                     bodyGyro.P = 90000
                     bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
                     bodyGyro.Parent = hrp
-
+                    
                     bodyVelocity = Instance.new("BodyVelocity")
                     bodyVelocity.Velocity = Vector3.new(0, 0, 0)
                     bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
                     bodyVelocity.Parent = hrp
                 end
             end)
-
+            
             getgenv().FlyConnection = RunService.RenderStepped:Connect(function()
                 if not getgenv().FlyEnabled then return end
                 local camCF = workspace.CurrentCamera.CFrame
                 local moveDir = Vector3.new(0, 0, 0)
-
+                
                 if UserInputService:IsKeyDown(Enum.KeyCode.W) then
                     moveDir = moveDir + camCF.LookVector
                 end
@@ -1996,7 +2032,7 @@ Fly:AddToggle({
                 if UserInputService:IsKeyDown(Enum.KeyCode.Q) then
                     moveDir = moveDir - Vector3.new(0, 1, 0)
                 end
-
+                
                 if moveDir.Magnitude > 0 then
                     moveDir = moveDir.Unit
                 end
@@ -2005,34 +2041,34 @@ Fly:AddToggle({
             end)
         else
             getgenv().FlyEnabled = false
-
+            
             if getgenv().FlyConnection then
                 getgenv().FlyConnection:Disconnect()
                 getgenv().FlyConnection = nil
             end
-
+            
             if getgenv().RagdollHandler then
                 getgenv().RagdollHandler:Disconnect()
                 getgenv().RagdollHandler = nil
             end
-
+            
             if getgenv().ResetterConnection then
                 getgenv().ResetterConnection:Disconnect()
                 getgenv().ResetterConnection = nil
             end
-
+            
             local char = Player.Character
             if char then
                 local hrp = char:FindFirstChild("HumanoidRootPart")
                 local humanoid = char:FindFirstChild("Humanoid")
-
+                
                 if humanoid then
                     humanoid.PlatformStand = false
                     if getgenv().OriginalStateType then
                         humanoid:ChangeState(getgenv().OriginalStateType)
                     end
                 end
-
+                
                 if hrp then
                     for _, v in ipairs(hrp:GetChildren()) do
                         if v:IsA("BodyGyro") or v:IsA("BodyVelocity") then
@@ -2057,8 +2093,8 @@ Fly:AddSlider({
 })
 
 local HitSounds = player:AddSection({
-        Name = "Hit Sounds",
-        Position = "right",
+	Name = "Hit Sounds",
+	Position = "right",
 });
 
 HitSounds:AddToggle({
@@ -2261,124 +2297,124 @@ local espEnabled = false
 local espConnections = {}
 
 local function clearESP()
-        for _, player in pairs(game.Players:GetPlayers()) do
-                local char = player.Character
-                if char and char:FindFirstChild("Head") then
-                        local esp = char.Head:FindFirstChild("AbilityESP")
-                        if esp then esp:Destroy() end
-                end
-        end
-        for _, conn in pairs(espConnections) do
-                conn:Disconnect()
-        end
-        espConnections = {}
+	for _, player in pairs(game.Players:GetPlayers()) do
+		local char = player.Character
+		if char and char:FindFirstChild("Head") then
+			local esp = char.Head:FindFirstChild("AbilityESP")
+			if esp then esp:Destroy() end
+		end
+	end
+	for _, conn in pairs(espConnections) do
+		conn:Disconnect()
+	end
+	espConnections = {}
 end
 
 local function getAbilityName(player)
-        local char = player.Character
-        if not char then return "No Character" end
+	local char = player.Character
+	if not char then return "No Character" end
 
-        local abilities = char:FindFirstChild("Abilities")
-        if abilities then
-                for _, ability in ipairs(abilities:GetChildren()) do
-                        if ability:IsA("BoolValue") and ability.Value then
-                                return ability.Name
-                        end
-                end
-        end
+	local abilities = char:FindFirstChild("Abilities")
+	if abilities then
+		for _, ability in ipairs(abilities:GetChildren()) do
+			if ability:IsA("BoolValue") and ability.Value then
+				return ability.Name
+			end
+		end
+	end
 
-        return player:GetAttribute("EquippedAbility") or "No Ability"
+	return player:GetAttribute("EquippedAbility") or "No Ability"
 end
 
 local function createAbilityESP(player)
-        if player == game.Players.LocalPlayer then return end
+	if player == game.Players.LocalPlayer then return end
 
-        local char = player.Character
-        if not char or not char:FindFirstChild("Head") then return end
-        local head = char.Head
+	local char = player.Character
+	if not char or not char:FindFirstChild("Head") then return end
+	local head = char.Head
 
-        local old = head:FindFirstChild("AbilityESP")
-        if old then old:Destroy() end
+	local old = head:FindFirstChild("AbilityESP")
+	if old then old:Destroy() end
 
-        local gui = Instance.new("BillboardGui")
-        gui.Name = "AbilityESP"
-        gui.Size = UDim2.new(0, 200, 0, 30)
-        gui.StudsOffset = Vector3.new(0, 3, 0)
-        gui.AlwaysOnTop = true
-        gui.Parent = head
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "AbilityESP"
+	gui.Size = UDim2.new(0, 200, 0, 30)
+	gui.StudsOffset = Vector3.new(0, 3, 0)
+	gui.AlwaysOnTop = true
+	gui.Parent = head
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextStrokeTransparency = 0.5
-        label.TextScaled = false
-        label.TextSize = 12
-        label.Font = Enum.Font.Gotham
-        label.Text = player.Name .. " (" .. getAbilityName(player) .. ")"
-        label.Parent = gui
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextStrokeTransparency = 0.5
+	label.TextScaled = false
+	label.TextSize = 12
+	label.Font = Enum.Font.Gotham
+	label.Text = player.Name .. " (" .. getAbilityName(player) .. ")"
+	label.Parent = gui
 
-        local lastText = ""
-        local runConn = game:GetService("RunService").Heartbeat:Connect(function()
-                if not label or not label.Parent then
-                        runConn:Disconnect()
-                        return
-                end
+	local lastText = ""
+	local runConn = game:GetService("RunService").Heartbeat:Connect(function()
+		if not label or not label.Parent then
+			runConn:Disconnect()
+			return
+		end
 
-                local newText = player.Name .. " (" .. getAbilityName(player) .. ")"
-                if newText ~= lastText then
-                        label.Text = newText
-                        lastText = newText
-                end
-        end)
+		local newText = player.Name .. " (" .. getAbilityName(player) .. ")"
+		if newText ~= lastText then
+			label.Text = newText
+			lastText = newText
+		end
+	end)
 
-        table.insert(espConnections, runConn)
+	table.insert(espConnections, runConn)
 end
 
 local function enableAbilityESP()
-        for _, player in ipairs(game.Players:GetPlayers()) do
-                if player ~= game.Players.LocalPlayer then
-                        if player.Character then
-                                createAbilityESP(player)
-                        end
+	for _, player in ipairs(game.Players:GetPlayers()) do
+		if player ~= game.Players.LocalPlayer then
+			if player.Character then
+				createAbilityESP(player)
+			end
 
-                        local charConn = player.CharacterAdded:Connect(function()
-                                task.wait(1)
-                                createAbilityESP(player)
-                        end)
+			local charConn = player.CharacterAdded:Connect(function()
+				task.wait(1)
+				createAbilityESP(player)
+			end)
 
-                        table.insert(espConnections, charConn)
-                end
-        end
+			table.insert(espConnections, charConn)
+		end
+	end
 
-        local playerConn = game.Players.PlayerAdded:Connect(function(player)
-                local charConn = player.CharacterAdded:Connect(function()
-                        task.wait(1)
-                        createAbilityESP(player)
-                end)
-                table.insert(espConnections, charConn)
-        end)
+	local playerConn = game.Players.PlayerAdded:Connect(function(player)
+		local charConn = player.CharacterAdded:Connect(function()
+			task.wait(1)
+			createAbilityESP(player)
+		end)
+		table.insert(espConnections, charConn)
+	end)
 
-        table.insert(espConnections, playerConn)
+	table.insert(espConnections, playerConn)
 end
 
 local AbilityESPSection = world:AddSection({
-        Name = "Ability ESP",
-        Position = "left"
+	Name = "Ability ESP",
+	Position = "left"
 })
 
 AbilityESPSection:AddToggle({
-        Name = "Ability ESP",
-        Default = false,
-        Callback = function(value)
-        autoSaveConfig()
-                espEnabled = value
-                if value then
-                        enableAbilityESP()
-                else
-                        clearESP()
-                end
-        end
+	Name = "Ability ESP",
+	Default = false,
+	Callback = function(value)
+	autoSaveConfig()
+		espEnabled = value
+		if value then
+			enableAbilityESP()
+		else
+			clearESP()
+		end
+	end
 })
 
 local Lighting = game:GetService("Lighting")
@@ -2391,260 +2427,260 @@ Lighting.FogEnd = 500
 Lighting.FogColor = Color3.fromRGB(170, 170, 170)
 
 local VisualFilterSection = world:AddSection({
-        Name = "Filter",
-        Position = "right"
+	Name = "Filter",
+	Position = "right"
 })
 
 VisualFilterSection:AddSlider({
-        Name = "Saturation",
-        Min = -1,
-        Max = 1,
-        Default = 0,
-        Increment = 0.05,
-        Callback = function(val)
-        autoLoadConfig()
-                ColorCorrection.Saturation = val
-        end
+	Name = "Saturation",
+	Min = -1,
+	Max = 1,
+	Default = 0,
+	Increment = 0.05,
+	Callback = function(val)
+	autoLoadConfig()
+		ColorCorrection.Saturation = val
+	end
 })
 
 
 VisualFilterSection:AddSlider({
-        Name = "Hue Shift",
-        Min = -180,
-        Max = 180,
-        Default = 0,
-        Increment = 1,
-        Callback = function(val)
-                local hue = (val % 360) / 360
-                ColorCorrection.TintColor = Color3.fromHSV(hue, 1, 1)
-        end
+	Name = "Hue Shift",
+	Min = -180,
+	Max = 180,
+	Default = 0,
+	Increment = 1,
+	Callback = function(val)
+		local hue = (val % 360) / 360
+		ColorCorrection.TintColor = Color3.fromHSV(hue, 1, 1)
+	end
 })
 
 VisualFilterSection:AddSlider({
-        Name = "Fog End Distance",
-        Min = 100,
-        Max = 1000,
-        Default = 500,
-        Increment = 25,
-        Callback = function(val)
-                Lighting.FogEnd = val
-        end
+	Name = "Fog End Distance",
+	Min = 100,
+	Max = 1000,
+	Default = 500,
+	Increment = 25,
+	Callback = function(val)
+		Lighting.FogEnd = val
+	end
 })
 
 local fpsSmoothEnabled = false
 
 local fpsSmoothSection = world:AddSection({
-        Name = "FPS Booster",
-        Position = "left"
+	Name = "FPS Booster",
+	Position = "left"
 })
 
 fpsSmoothSection:AddToggle({
-        Name = "FPS Booster",
-        Callback = function(state)
-                fpsSmoothEnabled = state
-                if state then
-                        enableSmoothMode()
-                else
-                        disableSmoothMode()
-                end
-        end
+	Name = "FPS Booster",
+	Callback = function(state)
+		fpsSmoothEnabled = state
+		if state then
+			enableSmoothMode()
+		else
+			disableSmoothMode()
+		end
+	end
 })
 
 function enableSmoothMode()
-        pcall(function()
-                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        end)
+	pcall(function()
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	end)
 
-        local lighting = game:GetService("Lighting")
-        lighting.Brightness = 1
-        lighting.ClockTime = 13.5
-        lighting.ExposureCompensation = 0.1
-        lighting.GlobalShadows = false
-        lighting.FogEnd = 1e9
+	local lighting = game:GetService("Lighting")
+	lighting.Brightness = 1
+	lighting.ClockTime = 13.5
+	lighting.ExposureCompensation = 0.1
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 1e9
 
-        for _, obj in ipairs(game:GetDescendants()) do
-                if obj:IsA("BasePart") then
-                        obj.Material = Enum.Material.SmoothPlastic
-                        obj.Reflectance = 0
-                        obj.Color = Color3.fromRGB(60, 60, 60)
-                elseif obj:IsA("Texture") or obj:IsA("Decal") then
-                        obj:Destroy()
-                end
-        end
+	for _, obj in ipairs(game:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+			obj.Color = Color3.fromRGB(60, 60, 60)
+		elseif obj:IsA("Texture") or obj:IsA("Decal") then
+			obj:Destroy()
+		end
+	end
 end
 
 function disableSmoothMode()
-        local lighting = game:GetService("Lighting")
-        lighting.Brightness = 1.5
-        lighting.ClockTime = 14
-        lighting.ExposureCompensation = 0
-        lighting.GlobalShadows = false
-        lighting.FogEnd = 1e9
+	local lighting = game:GetService("Lighting")
+	lighting.Brightness = 1.5
+	lighting.ClockTime = 14
+	lighting.ExposureCompensation = 0
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 1e9
 
-        for _, obj in ipairs(game:GetDescendants()) do
-                if obj:IsA("BasePart") then
-                        obj.Material = Enum.Material.SmoothPlastic
-                        obj.Reflectance = 0
-                        obj.Color = Color3.fromRGB(90, 90, 90)
-                end
-        end
+	for _, obj in ipairs(game:GetDescendants()) do
+		if obj:IsA("BasePart") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+			obj.Color = Color3.fromRGB(90, 90, 90)
+		end
+	end
 end
 
 local noRenderSection = misc:AddSection({
-        Name = "No Render",
-        Position = "left"
+	Name = "No Render",
+	Position = "left"
 })
 
 local conn1, conn2
 local mutedSounds = {}
 
 local function isVisualEffect(obj)
-        return obj:IsA("Trail")
-                or obj:IsA("ParticleEmitter")
-                or obj:IsA("Beam")
-                or obj:IsA("Attachment")
-                or obj:IsA("Decal")
-                or obj:IsA("Texture")
+	return obj:IsA("Trail")
+		or obj:IsA("ParticleEmitter")
+		or obj:IsA("Beam")
+		or obj:IsA("Attachment")
+		or obj:IsA("Decal")
+		or obj:IsA("Texture")
 end
 
 local function removeEffect(obj)
-        if not obj:IsDescendantOf(workspace) then return end
-        if isVisualEffect(obj) then
-                pcall(function()
-                        obj:Destroy()
-                end)
-        end
+	if not obj:IsDescendantOf(workspace) then return end
+	if isVisualEffect(obj) then
+		pcall(function()
+			obj:Destroy()
+		end)
+	end
 end
 
 local function muteSound(obj)
-        if obj:IsA("Sound") then
-                pcall(function()
-                        mutedSounds[obj] = obj.Volume
-                        obj.Volume = 0
-                        obj:Stop()
-                end)
-        end
+	if obj:IsA("Sound") then
+		pcall(function()
+			mutedSounds[obj] = obj.Volume
+			obj.Volume = 0
+			obj:Stop()
+		end)
+	end
 end
 
 noRenderSection:AddToggle({
-        Name = "No Render",
-        Default = false,
-        Callback = function(state)
-                if state then
-                        for _, obj in ipairs(workspace:GetDescendants()) do
-                                removeEffect(obj)
-                        end
+	Name = "No Render",
+	Default = false,
+	Callback = function(state)
+		if state then
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				removeEffect(obj)
+			end
 
-                        for _, obj in ipairs(game:GetDescendants()) do
-                                muteSound(obj)
-                        end
+			for _, obj in ipairs(game:GetDescendants()) do
+				muteSound(obj)
+			end
 
-                        conn1 = workspace.DescendantAdded:Connect(function(obj)
-                                task.defer(function()
-                                        removeEffect(obj)
-                                end)
-                        end)
+			conn1 = workspace.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					removeEffect(obj)
+				end)
+			end)
 
-                        conn2 = game.DescendantAdded:Connect(function(obj)
-                                task.defer(function()
-                                        muteSound(obj)
-                                end)
-                        end)
+			conn2 = game.DescendantAdded:Connect(function(obj)
+				task.defer(function()
+					muteSound(obj)
+				end)
+			end)
 
-                        local SoundService = game:GetService("SoundService")
-                        pcall(function()
-                                for _, obj in ipairs(SoundService:GetChildren()) do
-                                        obj:Destroy()
-                                end
-                                SoundService.AmbientReverb = Enum.ReverbType.NoReverb
-                        end)
-                else
-                        if conn1 then conn1:Disconnect() conn1 = nil end
-                        if conn2 then conn2:Disconnect() conn2 = nil end
+			local SoundService = game:GetService("SoundService")
+			pcall(function()
+				for _, obj in ipairs(SoundService:GetChildren()) do
+					obj:Destroy()
+				end
+				SoundService.AmbientReverb = Enum.ReverbType.NoReverb
+			end)
+		else
+			if conn1 then conn1:Disconnect() conn1 = nil end
+			if conn2 then conn2:Disconnect() conn2 = nil end
 
-                        for sound, vol in pairs(mutedSounds) do
-                                if sound and sound:IsDescendantOf(game) then
-                                        pcall(function()
-                                                sound.Volume = vol
-                                        end)
-                                end
-                        end
-                        mutedSounds = {}
-                end
-        end
+			for sound, vol in pairs(mutedSounds) do
+				if sound and sound:IsDescendantOf(game) then
+					pcall(function()
+						sound.Volume = vol
+					end)
+				end
+			end
+			mutedSounds = {}
+		end
+	end
 })
 
 local BallStatsSection = misc:AddSection({
-        Name = "Ball Stats",
-        Position = "right"
+	Name = "Ball Stats",
+	Position = "right"
 })
 
 local statsGui, label, renderConn
 local peakSpeed = 0
 
 BallStatsSection:AddToggle({
-        Name = "Ball Stats",
-        Default = false,
-        Callback = function(state)
-                if state then
-                        local Players = game:GetService("Players")
-                        local RunService = game:GetService("RunService")
-                        local player = Players.LocalPlayer
+	Name = "Ball Stats",
+	Default = false,
+	Callback = function(state)
+		if state then
+			local Players = game:GetService("Players")
+			local RunService = game:GetService("RunService")
+			local player = Players.LocalPlayer
 
-                        statsGui = Instance.new("ScreenGui")
-                        statsGui.Name = "BallSpeedGui"
-                        statsGui.ResetOnSpawn = false
-                        statsGui.Parent = player:WaitForChild("PlayerGui")
+			statsGui = Instance.new("ScreenGui")
+			statsGui.Name = "BallSpeedGui"
+			statsGui.ResetOnSpawn = false
+			statsGui.Parent = player:WaitForChild("PlayerGui")
 
-                        label = Instance.new("TextLabel")
-                        label.Size = UDim2.new(0, 300, 0, 80)
-                        label.Position = UDim2.new(0, 10, 0, 10)
-                        label.BackgroundTransparency = 1
-                        label.TextColor3 = Color3.new(1, 1, 1)
-                        label.Font = Enum.Font.GothamBold
-                        label.TextSize = 32
-                        label.Text = "velocity: ...\npeak: ..."
-                        label.TextXAlignment = Enum.TextXAlignment.Left
-                        label.TextYAlignment = Enum.TextYAlignment.Top
-                        label.TextWrapped = true
-                        label.Parent = statsGui
+			label = Instance.new("TextLabel")
+			label.Size = UDim2.new(0, 300, 0, 80)
+			label.Position = UDim2.new(0, 10, 0, 10)
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Font = Enum.Font.GothamBold
+			label.TextSize = 32
+			label.Text = "velocity: ...\npeak: ..."
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.TextYAlignment = Enum.TextYAlignment.Top
+			label.TextWrapped = true
+			label.Parent = statsGui
 
-                        local function findFastestBall()
-                                local ballsFolder = workspace:FindFirstChild("Balls")
-                                if not ballsFolder then return nil end
+			local function findFastestBall()
+				local ballsFolder = workspace:FindFirstChild("Balls")
+				if not ballsFolder then return nil end
 
-                                local bestBall = nil
-                                local maxSpeed = 0
+				local bestBall = nil
+				local maxSpeed = 0
 
-                                for _, obj in ipairs(ballsFolder:GetChildren()) do
-                                        if obj:IsA("BasePart") then
-                                                local speed = obj.Velocity.Magnitude
-                                                if speed > maxSpeed then
-                                                        maxSpeed = speed
-                                                        bestBall = obj
-                                                end
-                                        end
-                                end
+				for _, obj in ipairs(ballsFolder:GetChildren()) do
+					if obj:IsA("BasePart") then
+						local speed = obj.Velocity.Magnitude
+						if speed > maxSpeed then
+							maxSpeed = speed
+							bestBall = obj
+						end
+					end
+				end
 
-                                return bestBall
-                        end
+				return bestBall
+			end
 
-                        renderConn = RunService.RenderStepped:Connect(function()
-                                local ball = findFastestBall()
-                                if ball and ball:IsDescendantOf(workspace) then
-                                        local speed = math.floor(ball.Velocity.Magnitude + 0.5)
-                                        if speed > peakSpeed then
-                                                peakSpeed = speed
-                                        end
-                                        label.Text = "velocity: " .. speed .. "\npeak: " .. peakSpeed
-                                else
-                                        label.Text = "velocity: not found\npeak: " .. peakSpeed
-                                end
-                        end)
-                else
-                        if renderConn then renderConn:Disconnect() renderConn = nil end
-                        if statsGui then statsGui:Destroy() statsGui = nil end
-                        peakSpeed = 0
-                end
-        end
+			renderConn = RunService.RenderStepped:Connect(function()
+				local ball = findFastestBall()
+				if ball and ball:IsDescendantOf(workspace) then
+					local speed = math.floor(ball.Velocity.Magnitude + 0.5)
+					if speed > peakSpeed then
+						peakSpeed = speed
+					end
+					label.Text = "velocity: " .. speed .. "\npeak: " .. peakSpeed
+				else
+					label.Text = "velocity: not found\npeak: " .. peakSpeed
+				end
+			end)
+		else
+			if renderConn then renderConn:Disconnect() renderConn = nil end
+			if statsGui then statsGui:Destroy() statsGui = nil end
+			peakSpeed = 0
+		end
+	end
 })
