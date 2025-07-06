@@ -1,10 +1,6 @@
 local ContextActionService = game:GetService('ContextActionService')
 local Phantom = false
 
-local function BlockMovement(actionName, inputState, inputObject)
-    return Enum.ContextActionResult.Sink
-end
-
 local UserInputService = cloneref(game:GetService('UserInputService'))
 local ContentProvider = cloneref(game:GetService('ContentProvider'))
 local TweenService = cloneref(game:GetService('TweenService'))
