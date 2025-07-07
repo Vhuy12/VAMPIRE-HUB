@@ -54,8 +54,8 @@ if old_Vampire then
     Debris:AddItem(old_Vampire, 0)
 end
 
-if not isfolder("Vampire") then
-    makefolder("Vampire")
+if not isfolder("Vampireprivate") then
+    makefolder("Vampireprivate")
 end
 
 
@@ -584,8 +584,8 @@ local ClientName = Instance.new('TextLabel')
 ClientName.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
 ClientName.TextColor3 = Color3.fromRGB(240, 240, 240) -- branco suave
 ClientName.TextTransparency = 0.05
-ClientName.Text = 'Vampire free'
-ClientName.Name = 'Vampire free'
+ClientName.Text = 'Vampire private'
+ClientName.Name = 'Vampire private'
 ClientName.Size = UDim2.new(0, 31, 0, 13)
 ClientName.AnchorPoint = Vector2.new(0, 0.5)
 ClientName.Position = UDim2.new(0.056, 0, 0.055, 0)
@@ -4136,7 +4136,7 @@ do
                 Connections_Manager['Auto Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastAutoSpam then lastAutoSpam = 0 end
-    if now - lastAutoSpam < 0.05 then return end
+    if now - lastAutoSpam < 0.005 then return end
     lastAutoSpam = now
                 local Ball = Auto_Parry.Get_Ball()
 
@@ -4373,7 +4373,7 @@ Last_Parry = tick()
                 Connections_Manager['Manual Spam'] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if not lastManualSpam then lastManualSpam = 0 end
-    if now - lastManualSpam < 0.05 then return end
+    if now - lastManualSpam < 0.005 then return end
     lastManualSpam = now
                 if getgenv().spamui then
                     return
