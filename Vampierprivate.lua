@@ -4504,9 +4504,9 @@ if value then
     })
 
 local Module = rage:create_module({
-    title = 'ItIsNotPossibleToDisableIt',
-    flag = 'ItIsNotPossibleToDisableIt',
-    description = 'RiverOnTop',
+    title = 'I dont know what is this?',
+    flag = 'Idontknowwhatisthis',
+    description = 'Nahhh',
     section = 'left',
     callback = (function()
         local Players = game:GetService("Players")
@@ -4777,9 +4777,9 @@ local Module = rage:create_module({
 local currentIndex = 1
 
 local HotkeyParryType = rage:create_module({
-    title = 'Hotkey Parry Type [PC]',
+    title = 'Hotkey Parry Type',
     flag = 'HotkeyParryType',
-    description = 'Allows Hotkey Parry Type',
+    description = 'Turn on Hotkey Parry type',
     section = 'left',
     callback = function(value: boolean)
         getgenv().HotkeyParryType = value
