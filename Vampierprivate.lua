@@ -594,7 +594,7 @@ ClientName.TextXAlignment = Enum.TextXAlignment.Left
 ClientName.BorderSizePixel = 0
 ClientName.BorderColor3 = Color3.fromRGB(80, 80, 80)
 ClientName.TextSize = 13
-ClientName.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ClientName.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 ClientName.Parent = Handler
 
 local UIGradient = Instance.new('UIGradient')
