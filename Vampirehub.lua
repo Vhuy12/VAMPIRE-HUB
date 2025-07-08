@@ -1,5 +1,5 @@
 function loadMainScript()
-    loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/9b2141f7f19f5004"))()
+    loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/46dfe23444a7a16c"))()
 end
 
 local TweenService = game:GetService("TweenService")
